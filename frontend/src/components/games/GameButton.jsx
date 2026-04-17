@@ -125,7 +125,14 @@ export default function GameButton({ onRequest, cooldown }) {
         .game-list-arrow { color: var(--text-muted); font-size: 1.2rem; flex-shrink: 0; }
 
         @media (max-width: 600px) {
-          .game-menu { left: auto; right: 0; width: 240px; }
+          .game-menu {
+            position: fixed;
+            bottom: max(80px, env(safe-area-inset-bottom, 80px));
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 320px;
+          }
         }
       `}</style>
     </div>

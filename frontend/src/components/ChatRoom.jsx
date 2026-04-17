@@ -619,6 +619,7 @@ function ChatRoom({ socket, partner, mode, onNext }) {
             // Override accept handler for request_received phase
           }}
           onAccept={handleGameAccept}
+          onStart={() => setGameState(prev => prev ? { ...prev, phase: 'playing' } : null)}
           onClose={handleGameClose}
         />
       )}

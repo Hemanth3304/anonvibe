@@ -1,5 +1,6 @@
 // GameOverlay.jsx — Master orchestrator for all games
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import TicTacToe from './TicTacToe';
 import Connect4 from './Connect4';
 import TruthOrDare from './TruthOrDare';
@@ -15,7 +16,7 @@ const GAME_META = {
 };
 
 // phase: 'request_sent'|'request_received'|'toss'|'playing'|'ended'
-export default function GameOverlay({ socket, gameState, onAccept, onClose }) {
+export default function GameOverlay({ socket, gameState, onAccept, onStart, onClose }) {
   const { phase, game, firstTurn, incomingGame } = gameState;
   const meta = GAME_META[game || incomingGame];
 
@@ -60,7 +61,7 @@ export default function GameOverlay({ socket, gameState, onAccept, onClose }) {
   };
 
   // ── Render phases ────────────────────────────────────────────────
-  return (
+  const overlayContent = (
     <div className="game-overlay-backdrop">
       <div className="game-overlay-panel glass-panel animate-fade-in">
 
@@ -116,7 +117,10 @@ export default function GameOverlay({ socket, gameState, onAccept, onClose }) {
             <p className={tossResult.winner === 'me' ? 'toss-win' : 'toss-lose'}>
               {tossResult.winner === 'me' ? '🎉 You go first!' : '⏳ Stranger goes first!'}
             </p>
-            <button className="game-btn primary" onClick={() => socket.emit('game:start_confirmed')}>
+            <button className="game-btn primary" onClick={() => { 
+                socket.emit('game:start_confirmed');
+                if (onStart) onStart();
+            }}>
               Start Game →
             </button>
           </div>
@@ -280,4 +284,6 @@ export default function GameOverlay({ socket, gameState, onAccept, onClose }) {
       `}</style>
     </div>
   );
+
+  return createPortal(overlayContent, document.body);
 }
