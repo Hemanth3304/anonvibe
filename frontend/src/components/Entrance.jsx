@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquareText, Video, Sparkles, Globe2 } from 'lucide-react';
+import { MessageSquareText, Video, Sparkles, Globe2, Tag } from 'lucide-react';
 
 function Entrance({ onRegister }) {
   const [gender, setGender] = useState('unknown');
-  const [language, setLanguage] = useState('english');
+  const [preference, setPreference] = useState('');
   const [mode, setMode] = useState('text');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onRegister({ gender, language, mode });
+    onRegister({ gender, preference: preference.trim().toLowerCase(), mode });
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="entrance-container glass-panel"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
     >
       <motion.div
         initial={{ scale: 0.9 }}
@@ -26,10 +26,13 @@ function Entrance({ onRegister }) {
       >
         <Globe2 size={48} className="globe-icon" />
       </motion.div>
+
       <h1>Connect with the World</h1>
-      <p className="subtitle">Instant, anonymous, and free stranger chat platform.</p>
-      
+      <p className="subtitle">Instant, anonymous, and free stranger chat.</p>
+
       <form onSubmit={handleSubmit}>
+
+        {/* Gender */}
         <div className="form-group">
           <label>I am a</label>
           <select value={gender} onChange={(e) => setGender(e.target.value)}>
@@ -40,31 +43,44 @@ function Entrance({ onRegister }) {
           </select>
         </div>
 
+        {/* Preference (replaces language) */}
         <div className="form-group">
-          <label>I speak</label>
-          <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-            <option value="english">English</option>
-            <option value="hindi">Hindi</option>
-            <option value="spanish">Spanish</option>
-            <option value="french">French</option>
-            <option value="auto">Any Language</option>
-          </select>
+          <label>
+            <Tag size={13} style={{ verticalAlign: 'middle', marginRight: '5px' }} />
+            Chat Preference
+          </label>
+          <div className="pref-wrap">
+            <input
+              type="text"
+              value={preference}
+              onChange={(e) => setPreference(e.target.value)}
+              placeholder="e.g. gaming, music, coding… (leave blank for anyone)"
+              maxLength={40}
+            />
+            {preference && (
+              <span className="pref-tag">{preference.trim().toLowerCase()}</span>
+            )}
+          </div>
+          <p className="pref-hint">
+            Only strangers with the same preference will be matched. Leave blank to connect with anyone.
+          </p>
         </div>
 
+        {/* Mode */}
         <div className="form-group">
           <label>Preferred Mode</label>
           <div className="mode-selector">
-            <button 
-              type="button" 
-              className={mode === 'text' ? 'active' : ''} 
+            <button
+              type="button"
+              className={mode === 'text' ? 'active' : ''}
               onClick={() => setMode('text')}
             >
               <MessageSquareText size={20} />
               Text
             </button>
-            <button 
-              type="button" 
-              className={mode === 'video' ? 'active' : ''} 
+            <button
+              type="button"
+              className={mode === 'video' ? 'active' : ''}
               onClick={() => setMode('video')}
             >
               <Video size={20} />
@@ -73,8 +89,8 @@ function Entrance({ onRegister }) {
           </div>
         </div>
 
-        <motion.button 
-          type="submit" 
+        <motion.button
+          type="submit"
           className="glass-button start-btn"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -85,34 +101,91 @@ function Entrance({ onRegister }) {
       </form>
 
       <style>{`
+        /* ── Container ── */
         .entrance-container {
-          padding: 3rem;
-          max-width: 500px;
+          padding: 2.5rem;
+          max-width: 480px;
+          width: 100%;
           margin: 2rem auto;
           text-align: center;
           position: relative;
+          box-sizing: border-box;
         }
         .entrance-container::before {
           content: '';
           position: absolute;
-          top: -50%;
-          left: -50%;
-          width: 200%;
-          height: 200%;
-          background: radial-gradient(circle at center, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+          top: -50%; left: -50%;
+          width: 200%; height: 200%;
+          background: radial-gradient(circle at center, rgba(139,92,246,0.1) 0%, transparent 50%);
           z-index: -1;
           pointer-events: none;
         }
+
+        /* ── Icon ── */
         .globe-icon {
           color: var(--accent-primary);
-          margin-bottom: 1rem;
-          filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.5));
+          margin-bottom: 0.75rem;
+          filter: drop-shadow(0 0 10px rgba(139,92,246,0.5));
         }
-        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; letter-spacing: -0.5px; }
-        .subtitle { color: var(--text-muted); margin-bottom: 2.5rem; font-size: 1.1rem; }
-        .form-group { text-align: left; margin-bottom: 1.5rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .mode-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        /* ── Headings ── */
+        .entrance-container h1 {
+          font-size: clamp(1.6rem, 5vw, 2.4rem);
+          margin-bottom: 0.4rem;
+          letter-spacing: -0.5px;
+        }
+        .subtitle {
+          color: var(--text-muted);
+          margin-bottom: 2rem;
+          font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+        }
+
+        /* ── Form groups ── */
+        .form-group {
+          text-align: left;
+          margin-bottom: 1.25rem;
+        }
+        .entrance-container label {
+          display: block;
+          margin-bottom: 0.45rem;
+          font-weight: 600;
+          font-size: 0.82rem;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        /* ── Preference input ── */
+        .pref-wrap {
+          position: relative;
+        }
+        .pref-wrap input {
+          padding-right: 1rem;
+        }
+        .pref-tag {
+          display: inline-block;
+          margin-top: 0.5rem;
+          background: var(--accent-primary);
+          color: #fff;
+          font-size: 0.78rem;
+          font-weight: 600;
+          padding: 3px 10px;
+          border-radius: 99px;
+          letter-spacing: 0.3px;
+        }
+        .pref-hint {
+          margin-top: 0.4rem;
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          line-height: 1.4;
+        }
+
+        /* ── Mode selector ── */
+        .mode-selector {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+        }
         .mode-selector button {
           display: flex;
           align-items: center;
@@ -121,43 +194,61 @@ function Entrance({ onRegister }) {
           background: rgba(255,255,255,0.03);
           border: 1px solid var(--glass-border);
           color: var(--text-muted);
-          padding: 0.8rem;
+          padding: 0.75rem;
           border-radius: 12px;
           cursor: pointer;
           transition: all 0.3s ease;
           font-weight: 600;
+          font-size: 0.95rem;
+          font-family: inherit;
         }
         .mode-selector button:hover {
           background: rgba(255,255,255,0.08);
-          color: white;
+          color: var(--text-main);
         }
         .mode-selector button.active {
           background: var(--accent-primary);
           border-color: var(--accent-primary);
-          color: white;
+          color: #fff;
           box-shadow: var(--neon-glow);
         }
-        .start-btn { 
-          width: 100%; 
-          margin-top: 1.5rem; 
-          padding: 1.2rem; 
-          font-size: 1.2rem; 
+
+        /* ── Start button ── */
+        .start-btn {
+          width: 100%;
+          margin-top: 1.25rem;
+          padding: 1rem;
+          font-size: clamp(1rem, 2.5vw, 1.15rem);
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 0.5rem;
           background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
         }
+
+        /* ── Tablet ── */
         @media (max-width: 900px) {
-          .entrance-container { padding: 2.5rem; margin: 1.5rem auto; }
-          h1 { font-size: 2rem; }
+          .entrance-container { padding: 2rem 1.75rem; margin: 1.5rem auto; }
         }
+
+        /* ── Mobile ── */
         @media (max-width: 600px) {
-          .entrance-container { padding: 1.5rem 1.25rem; margin: 0.75rem auto; border-radius: 16px; }
-          h1 { font-size: 1.6rem; }
-          .subtitle { font-size: 0.95rem; margin-bottom: 1.25rem; }
+          .entrance-container {
+            padding: 1.5rem 1.1rem;
+            margin: 0.5rem auto;
+            border-radius: 16px;
+          }
+          .subtitle { margin-bottom: 1.25rem; }
           .form-group { margin-bottom: 1rem; }
-          .start-btn { font-size: 1rem; padding: 0.9rem; margin-top: 1rem; }
+          .mode-selector button { padding: 0.65rem; font-size: 0.88rem; }
+          .start-btn { padding: 0.85rem; margin-top: 0.75rem; }
+        }
+
+        /* ── Very small screens (<380px) ── */
+        @media (max-width: 380px) {
+          .entrance-container { padding: 1.25rem 0.9rem; }
+          .entrance-container h1 { font-size: 1.4rem; }
+          .globe-icon { width: 36px; height: 36px; }
         }
       `}</style>
     </motion.div>

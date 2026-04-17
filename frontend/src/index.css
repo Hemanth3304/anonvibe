@@ -31,12 +31,17 @@ body.light {
 body {
   font-family: 'Outfit', sans-serif;
   background: var(--bg-main);
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
     radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+  background-attachment: fixed;
   color: var(--text-main);
   min-height: 100vh;
+  min-height: 100svh;
   overflow-x: hidden;
+  /* Safe-area for notched phones */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .app-container {
@@ -44,16 +49,17 @@ body {
   margin: 0 auto;
   padding: 2rem;
   min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
 }
 
-/* For chat view, lock to viewport height */
+/* Chat view: lock to viewport — no scrolling allowed */
 .app-container.view-chat {
   height: 100vh;
-  height: 100dvh;
+  height: 100svh;
   overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 main {
@@ -61,6 +67,11 @@ main {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow-y: auto;
+}
+
+/* Entrance / matching views: allow scrolling on small screens */
+.app-container:not(.view-chat) main {
   overflow-y: auto;
 }
 

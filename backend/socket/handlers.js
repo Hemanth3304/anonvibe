@@ -21,14 +21,15 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
     io.emit('online:count', await redis.sCard('online:users'));
 
     // ── 1. REGISTER GUEST ─────────────────────────────────────────
-    socket.on('guest:register', async ({ gender, language, interests, mode }) => {
+    socket.on('guest:register', async ({ gender, language, preference, interests, mode }) => {
       const profile = {
         socketId: socket.id,
         guestId,
-        gender:    gender   || 'unknown',
-        language:  (language || 'english').toLowerCase().trim(),
-        interests: interests || [],
-        mode:      mode || 'text',   // 'text' | 'video' | 'share'
+        gender:     gender    || 'unknown',
+        preference: (preference || '').trim().toLowerCase(),
+        language:   (language  || 'english').toLowerCase().trim(), // kept for backward compat
+        interests:  interests || [],
+        mode:       mode || 'text',
         connectedAt: Date.now(),
         partnerId: null,
         roomId: null,
@@ -36,16 +37,15 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
 
       guests.set(socket.id, profile);
 
-      // Persist basic stats in Redis
       await redis.hSet(`guest:${socket.id}`, {
-        gender:   profile.gender,
-        language: profile.language,
-        mode:     profile.mode,
+        gender:     profile.gender,
+        preference: profile.preference,
+        mode:       profile.mode,
       });
       await redis.expire(`guest:${socket.id}`, 3600);
 
       socket.emit('guest:registered', { guestId });
-      logger.info(`Guest registered: ${guestId} | lang=${profile.language} | gender=${profile.gender}`);
+      logger.info(`Guest registered: ${guestId} | pref=${profile.preference || 'any'} | gender=${profile.gender}`);
     });
 
     // ── 2. JOIN MATCHING QUEUE ────────────────────────────────────
@@ -71,18 +71,18 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
 
         const payload = {
           roomId,
-          partnerSocketId: match.socketId,
-          partnerGender:   match.gender,
-          partnerLanguage: match.language,
-          partnerLocation: await getFakeLocation(), // geo approximation
+          partnerSocketId:  match.socketId,
+          partnerGender:    match.gender,
+          partnerPreference: match.preference || '',
+          partnerLocation:  await getFakeLocation(),
         };
 
         socket.emit('match:found', payload);
         io.to(match.socketId).emit('match:found', {
           ...payload,
-          partnerSocketId: socket.id,
-          partnerGender:   profile.gender,
-          partnerLanguage: profile.language,
+          partnerSocketId:  socket.id,
+          partnerGender:    profile.gender,
+          partnerPreference: profile.preference || '',
         });
 
         // Increment room stats
@@ -181,6 +181,13 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
       // Re-join queue automatically
       socket.emit('queue:searching');
     });
+
+    // ── 7b. LEAVE QUEUE (cancel matching) ────────────────────────
+    socket.on('queue:leave', async () => {
+      const profile = guests.get(socket.id);
+      if (profile) await matchingService.dequeue(redis, profile);
+    });
+
 
     // ── 8. REPORT USER ───────────────────────────────────────────
     socket.on('user:report', async ({ reason }) => {

@@ -1,57 +1,65 @@
 /**
  * Matching Service
- * Priority: language match → gender preference → any
- * Uses Redis sorted sets for efficient queue management
+ * Priority:
+ *   1. Same preference + same mode  (best match)
+ *   2. Same preference only
+ *   3. Both have no preference + same mode
+ *   4. Both have no preference (any mode)
+ *   5. If user has a preference but nobody matches — queue and wait
+ *      (never force-match across different preferences)
  */
 
 export const matchingService = {
 
   /**
    * Try to find a match for the incoming guest.
-   * Priority order:
-   *   1. Same language + available in queue
-   *   2. Any language + available in queue
+   * Key rule: if a user specifies a preference, ONLY match with the
+   * same preference. If no preference, match with anyone who also has
+   * no preference (or treat empty as "open").
    */
   async findMatch(redis, profile, guests) {
     const queueKey = 'queue:waiting';
 
-    // Get all waiting socket IDs
     const waiting = await redis.sMembers(queueKey);
     if (waiting.length === 0) return null;
 
-    let candidates = [];
+    const myPref = (profile.preference || '').trim().toLowerCase();
+
+    let bestMatch = null;
     let bestScore = -1;
 
     for (const socketId of waiting) {
       if (socketId === profile.socketId) continue;
 
       const candidate = guests.get(socketId);
-      if (!candidate || candidate.partnerId) continue; 
+      if (!candidate || candidate.partnerId) continue;
+
+      const theirPref = (candidate.preference || '').trim().toLowerCase();
+
+      // ── Preference gate ────────────────────────────────────────
+      // If either side has a preference, they MUST match.
+      if (myPref && theirPref && myPref !== theirPref) continue;   // both set, different → skip
+      if (myPref && !theirPref) continue;  // I want a specific topic, they don't → skip
+      if (!myPref && theirPref) continue;  // They want a specific topic, I don't → skip
+      // ──────────────────────────────────────────────────────────
 
       let score = 0;
-      // Language match (highest priority)
-      if (candidate.language === profile.language) score += 10;
-      else if (candidate.language === 'any' || profile.language === 'any') score += 5;
 
-      // Mode match
-      if (candidate.mode === profile.mode) score += 3;
+      // Same preference (both filled and equal)
+      if (myPref && theirPref && myPref === theirPref) score += 20;
 
-      // Variety: avoid immediate re-match if possible (optional score penalty)
-      // if (profile.lastPartnerId === candidate.socketId) score -= 5;
+      // Same mode (text/video)
+      if (candidate.mode === profile.mode) score += 5;
 
+      // Prefer candidates who have been waiting longer
+      // (socketId prefix is just a tie-breaker here)
       if (score > bestScore) {
         bestScore = score;
-        candidates = [candidate];
-      } else if (score === bestScore && score !== -1) {
-        candidates.push(candidate);
+        bestMatch = candidate;
       }
     }
 
-    if (candidates.length > 0) {
-      // Pick a random candidate from the best matches
-      const bestMatch = candidates[Math.floor(Math.random() * candidates.length)];
-      
-      // Remove from queue
+    if (bestMatch) {
       await redis.sRem(queueKey, bestMatch.socketId);
       return bestMatch;
     }
@@ -61,7 +69,7 @@ export const matchingService = {
 
   async enqueue(redis, profile) {
     await redis.sAdd('queue:waiting', profile.socketId);
-    await redis.expire('queue:waiting', 300); // auto-expire 5 min
+    await redis.expire('queue:waiting', 600); // auto-expire 10 min
   },
 
   async dequeue(redis, profile) {

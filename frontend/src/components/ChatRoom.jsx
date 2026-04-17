@@ -360,7 +360,9 @@ function ChatRoom({ socket, partner, mode, onNext }) {
         <div className="partner-info">
           <h3>Partner Info</h3>
           <p>Gender: {partner?.partnerGender}</p>
-          <p>Language: {partner?.partnerLanguage}</p>
+          {partner?.partnerPreference && (
+            <p>Topic: <span className="pref-badge">{partner.partnerPreference}</span></p>
+          )}
           <p>Location: {partner?.partnerLocation}</p>
         </div>
 
@@ -538,6 +540,17 @@ function ChatRoom({ socket, partner, mode, onNext }) {
         }
         .partner-info h3 { margin-bottom: 0.75rem; color: var(--accent-primary); font-size: 1rem; }
         .partner-info p { margin-bottom: 0.4rem; font-size: 0.85rem; color: var(--text-muted); }
+        .pref-badge {
+          display: inline-block;
+          background: var(--accent-primary);
+          color: #fff;
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 2px 8px;
+          border-radius: 99px;
+          margin-left: 4px;
+          letter-spacing: 0.3px;
+        }
         
         /* ===== VIDEO SECTION ===== */
         .video-section {

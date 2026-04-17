@@ -101,8 +101,18 @@ function App() {
           {view === 'matching' && (
             <div className="loading-view glass-panel animate-fade-in">
               <div className="loader"></div>
-              <h2>Searching for a stranger...</h2>
-              <p>Wait a moment while we find your perfect match.</p>
+              <h2>Searching for a stranger…</h2>
+              {profile?.preference
+                ? <p>Looking for someone interested in <strong style={{ color: 'var(--accent-primary)' }}>"{profile.preference}"</strong></p>
+                : <p>Finding your perfect anonymous match.</p>
+              }
+              <button
+                className="glass-button"
+                style={{ marginTop: '1.5rem', padding: '0.6rem 1.5rem', fontSize: '0.9rem' }}
+                onClick={() => { socket.emit('queue:leave'); setView('entrance'); }}
+              >
+                Cancel
+              </button>
             </div>
           )}
 
