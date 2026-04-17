@@ -40,42 +40,9 @@ function ChatRoom({ socket, partner, mode, onNext }) {
       setIsTyping(typing);
     });
 
-    socket.on('webrtc:offer', async ({ sdp }) => {
-      if (!peerConnection.current) return;
-      try {
-        await peerConnection.current.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp }));
-        const answer = await peerConnection.current.createAnswer();
-        await peerConnection.current.setLocalDescription(answer);
-        socket.emit('webrtc:answer', { sdp: answer.sdp });
-      } catch (err) {
-        console.error('WebRTC offer error:', err);
-      }
-    });
-
-    socket.on('webrtc:answer', async ({ sdp }) => {
-      if (!peerConnection.current) return;
-      try {
-        await peerConnection.current.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp }));
-      } catch (err) {
-        console.error('WebRTC answer error:', err);
-      }
-    });
-
-    socket.on('webrtc:ice-candidate', async ({ candidate }) => {
-      if (!peerConnection.current) return;
-      try {
-        await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
-      } catch (err) {
-        console.error('WebRTC ICE candidate error:', err);
-      }
-    });
-
     return () => {
       socket.off('chat:message');
       socket.off('chat:typing');
-      socket.off('webrtc:offer');
-      socket.off('webrtc:answer');
-      socket.off('webrtc:ice-candidate');
     };
   }, [socket]);
 
@@ -193,37 +160,117 @@ function ChatRoom({ socket, partner, mode, onNext }) {
     }
   }, [selectedVideo, selectedAudio, isFlipped]);
 
+  // Buffer for ICE candidates that arrive before remoteDescription is set
+  const iceCandidateBuffer = useRef([]);
+
   const initializeWebRTC = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/webrtc/ice-servers`);
-      const iceServers = response.data.iceServers || [];
+      const iceServers = response.data.iceServers || [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+      ];
 
-      peerConnection.current = new RTCPeerConnection({ iceServers });
+      const pc = new RTCPeerConnection({ iceServers });
+      peerConnection.current = pc;
 
-      peerConnection.current.onicecandidate = (event) => {
+      // ── ICE candidate handler ──
+      pc.onicecandidate = (event) => {
         if (event.candidate) {
           socket.emit('webrtc:ice-candidate', { candidate: event.candidate });
         }
       };
 
-      peerConnection.current.ontrack = (event) => {
+      // ── Remote stream received ──
+      pc.ontrack = (event) => {
+        console.log('[WebRTC] ontrack fired', event.streams);
         if (remoteVideoRef.current && event.streams && event.streams[0]) {
           remoteVideoRef.current.srcObject = event.streams[0];
         }
       };
 
+      // ── Connection state logging ──
+      pc.onconnectionstatechange = () => {
+        console.log('[WebRTC] Connection state:', pc.connectionState);
+      };
+      pc.oniceconnectionstatechange = () => {
+        console.log('[WebRTC] ICE state:', pc.iceConnectionState);
+      };
+
+      // ── Register signaling listeners NOW (pc is ready) ──
+      socket.off('webrtc:offer');
+      socket.off('webrtc:answer');
+      socket.off('webrtc:ice-candidate');
+
+      socket.on('webrtc:offer', async ({ sdp }) => {
+        try {
+          console.log('[WebRTC] Received offer');
+          await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp }));
+          // Flush buffered ICE candidates
+          for (const c of iceCandidateBuffer.current) {
+            await pc.addIceCandidate(new RTCIceCandidate(c)).catch(console.error);
+          }
+          iceCandidateBuffer.current = [];
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          socket.emit('webrtc:answer', { sdp: answer.sdp });
+          console.log('[WebRTC] Answer sent');
+        } catch (err) {
+          console.error('[WebRTC] Offer handling error:', err);
+        }
+      });
+
+      socket.on('webrtc:answer', async ({ sdp }) => {
+        try {
+          console.log('[WebRTC] Received answer');
+          await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp }));
+          // Flush buffered ICE candidates
+          for (const c of iceCandidateBuffer.current) {
+            await pc.addIceCandidate(new RTCIceCandidate(c)).catch(console.error);
+          }
+          iceCandidateBuffer.current = [];
+        } catch (err) {
+          console.error('[WebRTC] Answer handling error:', err);
+        }
+      });
+
+      socket.on('webrtc:ice-candidate', async ({ candidate }) => {
+        try {
+          if (pc.remoteDescription) {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          } else {
+            // Buffer until remote description is set
+            console.log('[WebRTC] Buffering ICE candidate');
+            iceCandidateBuffer.current.push(candidate);
+          }
+        } catch (err) {
+          console.error('[WebRTC] ICE candidate error:', err);
+        }
+      });
+
+      // ── Add local media tracks to peer connection ──
       await setupMediaStream();
 
-      // Simple polite logic based on socket id comparison (lowest id initiates)
-      if (socket.id < partner.partnerSocketId || true) { // For simplicity we might let one attempt offer
-        const offer = await peerConnection.current.createOffer();
-        await peerConnection.current.setLocalDescription(offer);
+      // ── Polite peer: only the peer with the smaller socket ID sends the offer ──
+      // This prevents both peers from sending offers simultaneously (glare)
+      const isOfferer = socket.id < partner.partnerSocketId;
+      console.log(`[WebRTC] I am the ${isOfferer ? 'offerer' : 'answerer'}. My ID: ${socket.id}, Partner: ${partner.partnerSocketId}`);
+
+      if (isOfferer) {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
         socket.emit('webrtc:offer', { sdp: offer.sdp });
+        console.log('[WebRTC] Offer sent');
       }
 
     } catch (err) {
-      console.error('Failed to init WebRTC', err);
-      setMessages(prev => [...prev, { id: Date.now(), text: 'System: Failed to access camera/microphone.', from: 'system', timestamp: Date.now() }]);
+      console.error('[WebRTC] Init failed:', err);
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        text: 'System: Failed to access camera/microphone.',
+        from: 'system',
+        timestamp: Date.now()
+      }]);
     }
   };
 

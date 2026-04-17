@@ -71,6 +71,7 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
 
         const payload = {
           roomId,
+          partnerSocketId: match.socketId,
           partnerGender:   match.gender,
           partnerLanguage: match.language,
           partnerLocation: await getFakeLocation(), // geo approximation
@@ -79,6 +80,7 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
         socket.emit('match:found', payload);
         io.to(match.socketId).emit('match:found', {
           ...payload,
+          partnerSocketId: socket.id,
           partnerGender:   profile.gender,
           partnerLanguage: profile.language,
         });
