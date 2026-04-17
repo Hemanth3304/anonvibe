@@ -346,16 +346,30 @@ input:checked + .theme-slider:before {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+  min-height: 200px;
+  align-content: start;
+}
+
+.gif-loading, .gif-empty {
+  grid-column: span 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 150px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
 }
 
 .gif-grid img {
   width: 100%;
   border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.2s;
-  height: 120px;
+  transition: all 0.2s ease;
+  height: 110px;
   object-fit: cover;
 }
+
 
 .gif-grid img:hover {
   transform: scale(1.05);

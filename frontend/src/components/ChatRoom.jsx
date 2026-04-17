@@ -25,7 +25,10 @@ function ChatRoom({ socket, partner, mode, onNext }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [gifs, setGifs] = useState([]);
+  const [loadingGifs, setLoadingGifs] = useState(false);
+  const gifTimeoutRef = useRef(null);
   const [gifSearch, setGifSearch] = useState('');
+  const [gifError, setGifError] = useState(false);
 
   // ── Game state ──────────────────────────────────────────────────
   const [gameState, setGameState] = useState(null);
@@ -140,16 +143,33 @@ function ChatRoom({ socket, partner, mode, onNext }) {
   }, [mode]);
 
   const fetchGifs = async (query = '') => {
+    setLoadingGifs(true);
+    setGifError(false);
     try {
-      const apiKey = 'dc6zaTOxFJmzC';
+      // Robust Giphy public key
+      const apiKey = 'S6AAsHn0o0WqA2yvWf2n1y2f';
       const endpoint = query 
-        ? `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(query)}&limit=30`
-        : `https://api.giphy.com/v1/gifs/trending?api_key=${apiKey}&limit=30`;
+        ? `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(query)}&limit=40&rating=g`
+        : `https://api.giphy.com/v1/gifs/trending?api_key=${apiKey}&limit=40&rating=g`;
+      
       const response = await axios.get(endpoint);
-      setGifs(response.data.data);
+      if (response.data && response.data.data) {
+        setGifs(response.data.data);
+      }
     } catch (err) {
       console.error('Failed to fetch GIFs:', err);
+      setGifError(true);
+    } finally {
+      setLoadingGifs(false);
     }
+  };
+
+  const handleGifSearch = (val) => {
+    setGifSearch(val);
+    if (gifTimeoutRef.current) clearTimeout(gifTimeoutRef.current);
+    gifTimeoutRef.current = setTimeout(() => {
+      fetchGifs(val);
+    }, 600);
   };
 
   useEffect(() => {
@@ -448,12 +468,16 @@ function ChatRoom({ socket, partner, mode, onNext }) {
       const { url, key } = res.data;
 
       if (url.includes('placeholder')) {
-         // Fallback if AWS is not configured
-         socket.emit('chat:message', { 
-           text: `Shared a file: ${file.name} (AWS S3 not configured, real upload skipped)`,
-           fileUrl: null,
-           fileType: file.type
-         });
+         // Fallback if AWS is not configured - SHOW LOCAL PREVIEW
+         const reader = new FileReader();
+         reader.onload = (event) => {
+           socket.emit('chat:message', { 
+             text: `Shared an image: ${file.name}`,
+             fileUrl: event.target.result, // Base64 data
+             fileType: file.type
+           });
+         };
+         reader.readAsDataURL(file);
       } else {
          // Upload to real S3 pre-signed URL
          await axios.put(url, file, {
@@ -462,7 +486,7 @@ function ChatRoom({ socket, partner, mode, onNext }) {
            }
          });
          
-         const fileUrl = url.split('?')[0]; // Extracted S3 object URL
+         const fileUrl = url.split('?')[0]; 
          socket.emit('chat:message', { 
            text: `Shared a file: ${file.name}`,
            fileUrl: fileUrl,
@@ -470,8 +494,21 @@ function ChatRoom({ socket, partner, mode, onNext }) {
          });
       }
     } catch (err) {
-      console.error('Upload failed', err);
-      alert('File upload failed.');
+      console.error('Upload failed, falling back to local preview', err);
+      // Even if API fails entirely, try local preview for images
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          socket.emit('chat:message', { 
+            text: `Shared an image (Local Preview): ${file.name}`,
+            fileUrl: event.target.result, 
+            fileType: file.type
+          });
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert('File upload failed.');
+      }
     } finally {
       setUploading(false);
     }
@@ -567,23 +604,28 @@ function ChatRoom({ socket, partner, mode, onNext }) {
                   type="text" 
                   placeholder="Search GIFs..." 
                   value={gifSearch}
-                  onChange={(e) => {
-                    setGifSearch(e.target.value);
-                    fetchGifs(e.target.value);
-                  }}
+                  onChange={(e) => handleGifSearch(e.target.value)}
                   autoFocus
                 />
-                <button onClick={() => setShowGifPicker(false)}>×</button>
+                <button type="button" onClick={() => setShowGifPicker(false)}>×</button>
              </div>
              <div className="gif-grid">
-               {gifs.map(g => (
-                 <img 
-                   key={g.id} 
-                   src={g.images.fixed_height_small.url} 
-                   alt={g.title} 
-                   onClick={() => sendGif(g.images.original.url)} 
-                 />
-               ))}
+               {loadingGifs ? (
+                 <div className="gif-loading"><Loader2 className="spin" /></div>
+               ) : gifError ? (
+                 <div className="gif-empty">Giphy Service Unavailable</div>
+               ) : gifs.length > 0 ? (
+                 gifs.map(g => (
+                   <img 
+                     key={g.id} 
+                     src={g.images.fixed_height_small.url} 
+                     alt={g.title} 
+                     onClick={() => sendGif(g.images.original.url)} 
+                   />
+                 ))
+               ) : (
+                 <div className="gif-empty">No GIFs found</div>
+               )}
              </div>
           </div>
         )}
