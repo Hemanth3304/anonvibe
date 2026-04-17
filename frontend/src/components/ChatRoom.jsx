@@ -724,17 +724,19 @@ function ChatRoom({ socket, partner, mode, onNext }) {
           .message { max-width: 80%; }
         }
 
-        /* ===== MOBILE (≤600px) — Omegle-style split ===== */
+        /* ===================================================
+           MOBILE (≤600px) — Omegle-style full layout
+           =================================================== */
         @media (max-width: 600px) {
-          /* Stack everything vertically */
-          .chat-container {
+
+          /* ── TEXT MODE: slim top bar + full chat ── */
+          .chat-container:not(.video-mode) {
+            display: grid;
             grid-template-columns: 1fr;
-            grid-template-rows: auto auto 1fr;
+            grid-template-rows: auto 1fr;
             overflow: hidden;
           }
-
-          /* ── TOP BAR: partner info + next button ── */
-          .chat-sidebar {
+          .chat-container:not(.video-mode) .chat-sidebar {
             border-right: none;
             border-bottom: 1px solid var(--glass-border);
             padding: 0.5rem 0.75rem;
@@ -745,7 +747,7 @@ function ChatRoom({ socket, partner, mode, onNext }) {
             overflow: visible;
             flex-shrink: 0;
           }
-          .partner-info {
+          .chat-container:not(.video-mode) .partner-info {
             display: flex;
             gap: 0.5rem;
             flex-wrap: nowrap;
@@ -753,15 +755,13 @@ function ChatRoom({ socket, partner, mode, onNext }) {
             overflow: hidden;
             align-items: center;
           }
-          .partner-info h3 { display: none; }
-          .partner-info p {
+          .chat-container:not(.video-mode) .partner-info h3 { display: none; }
+          .chat-container:not(.video-mode) .partner-info p {
             margin-bottom: 0;
             font-size: 0.72rem;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
           }
-          .next-btn {
+          .chat-container:not(.video-mode) .next-btn {
             margin-top: 0;
             padding: 0.4rem 0.75rem;
             font-size: 0.78rem;
@@ -769,59 +769,153 @@ function ChatRoom({ socket, partner, mode, onNext }) {
             white-space: nowrap;
           }
 
-          /* ── VIDEO ROW: side-by-side, fills ~45vh ── */
-          .video-section {
-            display: flex !important;
-            flex-direction: row;
-            gap: 4px;
-            padding: 4px;
-            height: 45vw;
-            max-height: 48vh;
-            min-height: 120px;
+          /* ── VIDEO MODE: Omegle layout ── */
+          .chat-container.video-mode {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+          }
+
+          /* Sidebar becomes a grid:
+             Row 1: video section (full width)
+             Row 2: partner info | next button */
+          .chat-container.video-mode .chat-sidebar {
+            display: grid;
+            grid-template-areas:
+              "video video"
+              "info  btn";
+            grid-template-rows: auto auto;
+            grid-template-columns: 1fr auto;
+            border-right: none;
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0;
+            gap: 0;
+            overflow: visible;
             flex-shrink: 0;
+          }
+
+          /* Partner info → info cell */
+          .chat-container.video-mode .partner-info {
+            grid-area: info;
+            display: flex;
+            flex-direction: row;
+            gap: 0.4rem;
+            align-items: center;
+            padding: 0.4rem 0.6rem;
+            overflow: hidden;
+          }
+          .chat-container.video-mode .partner-info h3 { display: none; }
+          .chat-container.video-mode .partner-info p {
+            margin-bottom: 0;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-muted);
+          }
+
+          /* Next button → btn cell */
+          .chat-container.video-mode .next-btn {
+            grid-area: btn;
+            margin-top: 0;
+            align-self: center;
+            padding: 0.4rem 0.7rem;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            margin-right: 0.5rem;
+          }
+
+          /* Video section → video row (spans both columns) */
+          .chat-container.video-mode .video-section {
+            grid-area: video;
+            display: flex !important;
+            position: relative;
+            width: 100%;
+            height: 48vw;
+            max-height: 52vh;
+            min-height: 160px;
             background: #000;
+            flex-shrink: 0;
           }
-          .video-container {
-            flex: 1;
+
+          /* Remote video = full background of video-section */
+          .chat-container.video-mode .video-container.remote {
+            position: absolute;
+            inset: 0;
+            width: 100% !important;
+            height: 100% !important;
             aspect-ratio: unset;
-            border-radius: 8px;
-            height: 100%;
+            border-radius: 0;
+            z-index: 1;
           }
-          .video-container video {
+
+          /* Local video = small PIP in top-right corner */
+          .chat-container.video-mode .video-container.local {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 90px;
+            height: 120px;
+            aspect-ratio: unset;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            z-index: 20;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            background: #111;
+          }
+          .chat-container.video-mode .video-container.local video {
             width: 100%;
             height: 100%;
             object-fit: cover;
           }
-          .video-controls {
-            bottom: 6px;
-            padding: 3px 8px;
+          .chat-container.video-mode .video-container.remote video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
           }
-          .control-btn { width: 26px; height: 26px; }
-          .watermark { font-size: 0.9rem; bottom: 6px; left: 6px; }
-          .report-btn { width: 28px; height: 28px; top: 6px; right: 6px; }
 
-          /* ── CHAT PANEL: fills remaining space ── */
-          .chat-main {
-            min-height: 0;
+          /* Hide local video settings overlay on mobile (too small) */
+          .chat-container.video-mode .local-video-settings {
+            display: none;
+          }
+
+          /* Mic/cam controls stay at bottom of remote video */
+          .chat-container.video-mode .video-controls {
+            z-index: 10;
+            bottom: 8px;
+          }
+
+          /* Report button on remote video */
+          .chat-container.video-mode .report-btn {
+            z-index: 10;
+            top: 8px;
+            right: 8px;
+          }
+
+          /* Watermark */
+          .chat-container.video-mode .watermark {
+            font-size: 0.85rem;
+            z-index: 5;
+          }
+
+          /* ── CHAT AREA: fills remaining height ── */
+          .chat-container.video-mode .chat-main {
             flex: 1;
+            min-height: 0;
           }
           .messages-list {
             padding: 0.6rem 0.75rem;
             gap: 0.4rem;
           }
           .message { max-width: 88%; }
-          .msg-bubble { padding: 0.65rem 0.85rem; font-size: 0.85rem; }
+          .msg-bubble { padding: 0.6rem 0.8rem; font-size: 0.85rem; }
           .chat-input {
             padding: 0.5rem 0.65rem;
             gap: 0.4rem;
           }
           .icon-btn svg { width: 17px; height: 17px; }
           .send-btn { width: 36px; height: 36px; }
-
-          /* Text-only mode on mobile: just the top bar + full chat */
-          .chat-container:not(.video-mode) {
-            grid-template-rows: auto 1fr;
-          }
         }
       `}</style>
     </div>
