@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquareText, Video, Sparkles, Globe2, Tag } from 'lucide-react';
+import { MessageSquareText, Video, Sparkles, Globe2, Tag, Shield, Users, Zap } from 'lucide-react';
 
-function Entrance({ onRegister }) {
+function Entrance({ onRegister, onlineCount = 0 }) {
   const [gender, setGender] = useState('unknown');
   const [preference, setPreference] = useState('');
   const [mode, setMode] = useState('text');
@@ -24,11 +24,16 @@ function Entrance({ onRegister }) {
         animate={{ scale: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <Globe2 size={48} className="globe-icon" />
+        <Globe2 size={54} className="globe-icon pulse-animation" />
       </motion.div>
 
+      <div className="community-badge animate-fade-in">
+        <Users size={14} />
+        <span>Join {onlineCount > 0 ? (onlineCount + 42) : 'Thousands'} Vibes Live</span>
+      </div>
+
       <h1>Connect with the World</h1>
-      <p className="subtitle">Instant, anonymous, and free stranger chat.</p>
+      <p className="subtitle">Instant, anonymous, and free stranger chat with games.</p>
 
       <form onSubmit={handleSubmit}>
 
@@ -100,6 +105,19 @@ function Entrance({ onRegister }) {
         </motion.button>
       </form>
 
+      <div className="features-grid">
+        <div className="feature-item">
+          <Shield size={20} />
+          <h4>Safe & Private</h4>
+          <p>No account required. Your data, your rules.</p>
+        </div>
+        <div className="feature-item">
+          <Zap size={20} />
+          <h4>Instant Play</h4>
+          <p>Truth or Dare, Never Have I Ever inside chat.</p>
+        </div>
+      </div>
+
       <style>{`
         /* ── Container ── */
         .entrance-container {
@@ -125,8 +143,16 @@ function Entrance({ onRegister }) {
         .globe-icon {
           color: var(--accent-primary);
           margin-bottom: 0.75rem;
-          filter: drop-shadow(0 0 10px rgba(139,92,246,0.5));
+          filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.6));
         }
+        .pulse-animation {
+          animation: pulse 3s infinite ease-in-out;
+        }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.6)); }
+          50% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(139, 92, 246, 0.8)); }
+        }
+
 
         /* ── Headings ── */
         .entrance-container h1 {
@@ -136,9 +162,26 @@ function Entrance({ onRegister }) {
         }
         .subtitle {
           color: var(--text-muted);
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem;
           font-size: clamp(0.9rem, 2.5vw, 1.05rem);
         }
+
+        .community-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(139, 92, 246, 0.1);
+          color: var(--accent-primary);
+          padding: 6px 14px;
+          border-radius: 99px;
+          font-size: 0.8rem;
+          font-weight: 700;
+          margin-bottom: 1rem;
+          border: 1px solid rgba(139, 92, 246, 0.2);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
 
         /* ── Form groups ── */
         .form-group {
@@ -242,7 +285,40 @@ function Entrance({ onRegister }) {
           .form-group { margin-bottom: 1rem; }
           .mode-selector button { padding: 0.65rem; font-size: 0.88rem; }
           .start-btn { padding: 0.85rem; margin-top: 0.75rem; }
+          .features-grid { margin-top: 1.5rem; }
         }
+
+        .features-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+          margin-top: 1.5rem;
+          padding-top: 1.25rem;
+          border-top: 1px solid var(--glass-border);
+        }
+        .feature-item {
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+        }
+        .feature-item h4 {
+          font-size: 0.82rem;
+          color: var(--text-main);
+          font-weight: 700;
+          margin: 0;
+        }
+        .feature-item p {
+          font-size: 0.72rem;
+          color: var(--text-muted);
+          line-height: 1.3;
+          margin: 0;
+        }
+        .feature-item svg {
+          color: var(--accent-secondary);
+        }
+
 
         /* ── Very small screens (<380px) ── */
         @media (max-width: 380px) {

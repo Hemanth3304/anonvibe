@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
+import { Share2 } from 'lucide-react';
 import Entrance from './components/Entrance';
 import ChatRoom from './components/ChatRoom';
 import AdminDashboard from './components/AdminDashboard';
@@ -83,11 +84,33 @@ function App() {
       setTheme(prev => prev === 'dark' ? 'light' : 'dark');
     };
 
+    const handleShare = async () => {
+      const shareData = {
+        title: 'AnonVibe',
+        text: 'Join me on AnonVibe - Anonymously connect with the world and play games!',
+        url: window.location.origin
+      };
+
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+        } else {
+          await navigator.clipboard.writeText(window.location.origin);
+          alert('Link copied to clipboard! Share it with your friends 🚀');
+        }
+      } catch (err) {
+        console.error('Share failed:', err);
+      }
+    };
+
     return (
       <div className={`app-container${view === 'chat' ? ' view-chat' : ''}`}>
         <header>
           <div className="logo">AnonVibe</div>
           <div className="header-right">
+            <button className="icon-btn share-btn" onClick={handleShare} title="Share AnonVibe">
+              <Share2 size={20} />
+            </button>
             <label className="theme-switch" title="Toggle Theme">
               <input 
                 type="checkbox" 
@@ -106,7 +129,7 @@ function App() {
 
         <main>
           {view === 'entrance' && (
-            <Entrance onRegister={handleRegister} />
+            <Entrance onRegister={handleRegister} onlineCount={onlineCount} />
           )}
 
           {view === 'matching' && (
