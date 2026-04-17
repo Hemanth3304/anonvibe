@@ -308,7 +308,7 @@ function ChatRoom({ socket, partner, mode, onNext }) {
   };
 
   return (
-    <div className="chat-container glass-panel animate-fade-in">
+    <div className="chat-container glass-panel animate-fade-in" style={{ flex: 1, minHeight: 0 }}>
       <div className="chat-sidebar">
         <div className="partner-info">
           <h3>Partner Info</h3>
@@ -473,28 +473,32 @@ function ChatRoom({ socket, partner, mode, onNext }) {
         </form>
       </div>
 
-      <style jsx>{`
+      <style>{`
+        /* ===== BASE CHAT LAYOUT ===== */
         .chat-container {
           display: grid;
           grid-template-columns: 280px 1fr;
-          height: 75vh;
+          height: 100%;
           overflow: hidden;
         }
         .chat-sidebar {
-          padding: 2rem;
+          padding: 1.5rem;
           border-right: 1px solid var(--glass-border);
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 1.25rem;
+          overflow-y: auto;
         }
-        .partner-info h3 { margin-bottom: 1rem; color: var(--accent-primary); }
-        .partner-info p { margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted); }
+        .partner-info h3 { margin-bottom: 0.75rem; color: var(--accent-primary); font-size: 1rem; }
+        .partner-info p { margin-bottom: 0.4rem; font-size: 0.85rem; color: var(--text-muted); }
         
+        /* ===== VIDEO SECTION ===== */
         .video-section {
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 0.75rem;
           flex: 1;
+          min-height: 0;
         }
         .video-container {
           position: relative;
@@ -504,7 +508,6 @@ function ChatRoom({ socket, partner, mode, onNext }) {
           background: rgba(0,0,0,0.5);
           aspect-ratio: 4/3;
         }
-        
         .local-video-settings {
           position: absolute;
           inset: 0;
@@ -522,16 +525,16 @@ function ChatRoom({ socket, partner, mode, onNext }) {
         .inner-video-settings {
           display: flex;
           flex-direction: column;
-          gap: 10px;
-          width: 80%;
+          gap: 8px;
+          width: 85%;
         }
         .inner-video-settings select {
-          padding: 8px;
+          padding: 6px 8px;
           background: rgba(255,255,255,0.9);
           border: none;
           color: #000;
           border-radius: 6px;
-          font-size: 0.85rem;
+          font-size: 0.8rem;
           cursor: pointer;
         }
         body.dark .inner-video-settings select {
@@ -546,37 +549,37 @@ function ChatRoom({ socket, partner, mode, onNext }) {
           background: rgba(255,255,255,0.9);
           color: #000;
           border: none;
-          padding: 8px;
+          padding: 6px 8px;
           border-radius: 6px;
           cursor: pointer;
           font-weight: 600;
+          font-size: 0.8rem;
         }
         body.dark .flip-btn {
           background: rgba(30,30,30,0.95);
           color: #fff;
           border: 1px solid rgba(255,255,255,0.2);
         }
-
         .watermark {
           position: absolute;
-          bottom: 10px;
-          left: 10px;
+          bottom: 8px;
+          left: 8px;
           font-weight: 800;
-          font-size: 1.5rem;
+          font-size: 1.2rem;
           color: rgba(255,255,255,0.4);
           z-index: 5;
           pointer-events: none;
         }
         .report-btn {
           position: absolute;
-          top: 10px;
-          right: 10px;
+          top: 8px;
+          right: 8px;
           background: rgba(0,0,0,0.3);
           color: #fff;
           border: none;
           border-radius: 50%;
-          width: 36px;
-          height: 36px;
+          width: 32px;
+          height: 32px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -588,7 +591,6 @@ function ChatRoom({ socket, partner, mode, onNext }) {
           color: #ef4444;
           background: rgba(239, 68, 68, 0.2);
         }
-
         .video-container video {
           width: 100%;
           height: 100%;
@@ -596,13 +598,13 @@ function ChatRoom({ socket, partner, mode, onNext }) {
         }
         .video-controls {
           position: absolute;
-          bottom: 10px;
+          bottom: 8px;
           left: 50%;
           transform: translateX(-50%);
           display: flex;
-          gap: 10px;
+          gap: 8px;
           background: rgba(0,0,0,0.4);
-          padding: 5px 10px;
+          padding: 4px 10px;
           border-radius: 20px;
           backdrop-filter: blur(4px);
         }
@@ -612,43 +614,49 @@ function ChatRoom({ socket, partner, mode, onNext }) {
           color: white;
           cursor: pointer;
           border-radius: 50%;
-          width: 32px; height: 32px;
+          width: 30px; height: 30px;
           display: flex; align-items: center; justify-content: center;
           transition: 0.3s;
         }
         .control-btn:hover { background: rgba(255,255,255,0.2); }
         .control-btn.disabled { color: #ef4444; }
 
+        /* ===== NEXT BTN ===== */
         .next-btn { 
           background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); 
           margin-top: auto;
+          flex-shrink: 0;
         }
 
+        /* ===== CHAT MAIN PANEL ===== */
         .chat-main {
           display: flex;
           flex-direction: column;
           height: 100%;
+          min-height: 0;
+          position: relative;
         }
         .messages-list {
           flex: 1;
-          padding: 2rem;
+          padding: 1.5rem 2rem;
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 0.75rem;
+          min-height: 0;
         }
-        .system-msg { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin: 1rem 0; font-style: italic; }
+        .system-msg { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin: 0.75rem 0; font-style: italic; }
         
         .message { max-width: 70%; align-self: flex-start; }
         .message.own { align-self: flex-end; }
         .message.system { align-self: center; background: none; }
         
         .msg-bubble {
-          padding: 1rem 1.2rem;
+          padding: 0.85rem 1.1rem;
           border-radius: 18px;
           border-bottom-left-radius: 4px;
           background: rgba(255, 255, 255, 0.05);
-          font-size: 0.95rem; line-height: 1.4;
+          font-size: 0.9rem; line-height: 1.5;
           word-break: break-word;
         }
         .message.own .msg-bubble {
@@ -662,29 +670,104 @@ function ChatRoom({ socket, partner, mode, onNext }) {
         }
         .msg-time { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; padding: 0 4px; }
         .message.own .msg-time { text-align: right; }
-
         .file-attachment { margin-top: 0.5rem; }
         .chat-img { max-width: 100%; border-radius: 8px; margin-top: 0.5rem; }
         .file-link { color: #93c5fd; text-decoration: underline; font-size: 0.9rem; }
-
         .typing-indicator { font-size: 0.8rem; color: var(--accent-primary); font-style: italic; }
 
+        /* ===== CHAT INPUT ===== */
         .chat-input {
-          padding: 1.5rem 2rem;
+          padding: 1rem 1.5rem;
           border-top: 1px solid var(--glass-border);
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 0.75rem;
+          flex-shrink: 0;
+        }
+        .chat-input input {
+          flex: 1;
+          min-width: 0;
         }
         .icon-btn {
+          flex-shrink: 0;
           background: none; border: none; color: var(--text-muted);
           cursor: pointer; transition: 0.3s;
           display: flex; align-items: center; justify-content: center;
+          padding: 4px;
         }
         .icon-btn:hover { color: var(--accent-primary); }
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .send-btn { padding: 0.8rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; }
+        .send-btn {
+          flex-shrink: 0;
+          padding: 0;
+          border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          width: 42px; height: 42px;
+        }
+
+        /* ===== TABLET (≤900px) ===== */
+        @media (max-width: 900px) {
+          .chat-container {
+            grid-template-columns: 220px 1fr;
+          }
+          .chat-sidebar {
+            padding: 1rem;
+            gap: 1rem;
+          }
+          .messages-list {
+            padding: 1rem 1.25rem;
+          }
+          .chat-input {
+            padding: 0.75rem 1rem;
+          }
+          .message { max-width: 80%; }
+        }
+
+        /* ===== MOBILE (≤600px) ===== */
+        @media (max-width: 600px) {
+          .chat-container {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto 1fr;
+          }
+          .chat-sidebar {
+            border-right: none;
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0.75rem 1rem;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            overflow-y: visible;
+          }
+          .partner-info {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            flex: 1;
+          }
+          .partner-info h3 { display: none; }
+          .partner-info p { margin-bottom: 0; font-size: 0.78rem; }
+          .video-section {
+            display: none;
+          }
+          .next-btn {
+            margin-top: 0;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+          }
+          .messages-list {
+            padding: 0.75rem 1rem;
+            gap: 0.5rem;
+          }
+          .message { max-width: 85%; }
+          .chat-input {
+            padding: 0.6rem 0.75rem;
+            gap: 0.5rem;
+          }
+          .icon-btn svg { width: 18px; height: 18px; }
+          .send-btn { width: 38px; height: 38px; }
+        }
       `}</style>
     </div>
   );

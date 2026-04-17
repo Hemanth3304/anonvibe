@@ -116,7 +116,7 @@ function App() {
           )}
         </main>
 
-      <style jsx>{`
+      <style>{`
         .dot {
           height: 8px;
           width: 8px;
@@ -130,13 +130,14 @@ function App() {
           font-weight: 600;
           color: var(--text-muted);
           font-size: 0.9rem;
+          white-space: nowrap;
         }
         .loading-view {
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          height: 60vh;
+          flex: 1;
           text-align: center;
         }
         .loader {
@@ -151,6 +152,11 @@ function App() {
         @keyframes rotation {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 600px) {
+          .loading-view h2 { font-size: 1.2rem; }
+          .loading-view p { font-size: 0.85rem; }
+          .loader { width: 36px; height: 36px; margin-bottom: 1.25rem; }
         }
       `}</style>
     </div>

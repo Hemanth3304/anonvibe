@@ -44,8 +44,56 @@ body {
   margin: 0 auto;
   padding: 2rem;
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ============================
+   Responsive Breakpoints
+   ============================ */
+
+/* Tablet */
+@media (max-width: 900px) {
+  .app-container {
+    padding: 1rem;
+  }
+  header {
+    margin-bottom: 1rem;
+  }
+  .logo {
+    font-size: 1.2rem;
+  }
+  .online-indicator {
+    font-size: 0.8rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .app-container {
+    padding: 0.75rem;
+  }
+  header {
+    margin-bottom: 0.75rem;
+  }
+  .logo {
+    font-size: 1.1rem;
+  }
+  .online-indicator {
+    font-size: 0.75rem;
+  }
+  .theme-switch {
+    width: 42px;
+    height: 22px;
+  }
 }
 
 /* Glassmorphism Classes */
@@ -120,6 +168,7 @@ header {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  flex-shrink: 0;
 }
 
 .logo {
