@@ -211,31 +211,29 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
     gameRelay('game:end');
     gameRelay('game:start_confirmed');
 
-    // Coin toss — server decides the result to prevent cheating
-    const tossState = new Map(); // roomId → { myId: choice, ... }
+    // Coin toss — first person to click decides the toss instantly
+    const tossState = new Set(); // roomId
     socket.on('game:toss', ({ choice }) => {
       const profile = guests.get(socket.id);
-      if (!profile?.roomId) return;
+      if (!profile?.roomId || !profile?.partnerId) return;
 
       const roomId = profile.roomId;
-      if (!tossState.has(roomId)) tossState.set(roomId, {});
-      const room = tossState.get(roomId);
-      room[socket.id] = choice;
+      if (tossState.has(roomId)) return; // Already resolved
+      tossState.add(roomId);
 
-      // Relay my choice to partner so they know I've picked
-      socket.to(roomId).emit('game:toss_peer_chosen', { from: socket.id });
+      const result = Math.random() < 0.5 ? 'heads' : 'tails';
+      const senderWins = (result === choice);
 
-      // If both players have chosen, decide the result
-      const sockets = Object.keys(room);
-      if (sockets.length === 2) {
-        const result   = Math.random() < 0.5 ? 'heads' : 'tails';
-        const winnerId = result === room[sockets[0]] ? sockets[0] : sockets[1];
-        const loserId  = winnerId === sockets[0] ? sockets[1] : sockets[0];
-
-        io.to(winnerId).emit('game:toss_result', { result, winner: 'me' });
-        io.to(loserId ).emit('game:toss_result', { result, winner: 'them' });
-        tossState.delete(roomId);
+      if (senderWins) {
+        io.to(socket.id).emit('game:toss_result', { result, winner: 'me' });
+        io.to(profile.partnerId).emit('game:toss_result', { result, winner: 'them' });
+      } else {
+        io.to(socket.id).emit('game:toss_result', { result, winner: 'them' });
+        io.to(profile.partnerId).emit('game:toss_result', { result, winner: 'me' });
       }
+
+      // Cleanup to allow toss in a future game in the same room
+      setTimeout(() => tossState.delete(roomId), 10000);
     });
 
     // ── 8. REPORT USER ───────────────────────────────────────────
