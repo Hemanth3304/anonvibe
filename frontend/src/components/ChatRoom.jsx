@@ -308,7 +308,7 @@ function ChatRoom({ socket, partner, mode, onNext }) {
   };
 
   return (
-    <div className="chat-container glass-panel animate-fade-in" style={{ flex: 1, minHeight: 0 }}>
+    <div className={`chat-container glass-panel animate-fade-in${mode === 'video' ? ' video-mode' : ''}`} style={{ flex: 1, minHeight: 0 }}>
       <div className="chat-sidebar">
         <div className="partner-info">
           <h3>Partner Info</h3>
@@ -724,49 +724,104 @@ function ChatRoom({ socket, partner, mode, onNext }) {
           .message { max-width: 80%; }
         }
 
-        /* ===== MOBILE (≤600px) ===== */
+        /* ===== MOBILE (≤600px) — Omegle-style split ===== */
         @media (max-width: 600px) {
+          /* Stack everything vertically */
           .chat-container {
             grid-template-columns: 1fr;
-            grid-template-rows: auto 1fr;
+            grid-template-rows: auto auto 1fr;
+            overflow: hidden;
           }
+
+          /* ── TOP BAR: partner info + next button ── */
           .chat-sidebar {
             border-right: none;
             border-bottom: 1px solid var(--glass-border);
-            padding: 0.75rem 1rem;
+            padding: 0.5rem 0.75rem;
             flex-direction: row;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center;
             gap: 0.5rem;
-            overflow-y: visible;
+            overflow: visible;
+            flex-shrink: 0;
           }
           .partner-info {
             display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
+            gap: 0.5rem;
+            flex-wrap: nowrap;
             flex: 1;
+            overflow: hidden;
+            align-items: center;
           }
           .partner-info h3 { display: none; }
-          .partner-info p { margin-bottom: 0; font-size: 0.78rem; }
-          .video-section {
-            display: none;
+          .partner-info p {
+            margin-bottom: 0;
+            font-size: 0.72rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
           .next-btn {
             margin-top: 0;
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.78rem;
+            flex-shrink: 0;
+            white-space: nowrap;
+          }
+
+          /* ── VIDEO ROW: side-by-side, fills ~45vh ── */
+          .video-section {
+            display: flex !important;
+            flex-direction: row;
+            gap: 4px;
+            padding: 4px;
+            height: 45vw;
+            max-height: 48vh;
+            min-height: 120px;
+            flex-shrink: 0;
+            background: #000;
+          }
+          .video-container {
+            flex: 1;
+            aspect-ratio: unset;
+            border-radius: 8px;
+            height: 100%;
+          }
+          .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          .video-controls {
+            bottom: 6px;
+            padding: 3px 8px;
+          }
+          .control-btn { width: 26px; height: 26px; }
+          .watermark { font-size: 0.9rem; bottom: 6px; left: 6px; }
+          .report-btn { width: 28px; height: 28px; top: 6px; right: 6px; }
+
+          /* ── CHAT PANEL: fills remaining space ── */
+          .chat-main {
+            min-height: 0;
+            flex: 1;
           }
           .messages-list {
-            padding: 0.75rem 1rem;
-            gap: 0.5rem;
-          }
-          .message { max-width: 85%; }
-          .chat-input {
             padding: 0.6rem 0.75rem;
-            gap: 0.5rem;
+            gap: 0.4rem;
           }
-          .icon-btn svg { width: 18px; height: 18px; }
-          .send-btn { width: 38px; height: 38px; }
+          .message { max-width: 88%; }
+          .msg-bubble { padding: 0.65rem 0.85rem; font-size: 0.85rem; }
+          .chat-input {
+            padding: 0.5rem 0.65rem;
+            gap: 0.4rem;
+          }
+          .icon-btn svg { width: 17px; height: 17px; }
+          .send-btn { width: 36px; height: 36px; }
+
+          /* Text-only mode on mobile: just the top bar + full chat */
+          .chat-container:not(.video-mode) {
+            grid-template-rows: auto 1fr;
+          }
         }
       `}</style>
     </div>

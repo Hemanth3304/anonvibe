@@ -102,6 +102,20 @@ main {
     width: 42px;
     height: 22px;
   }
+
+  /* In chat mode on mobile: go fully edge-to-edge, lock height */
+  .app-container.view-chat {
+    padding: 0;
+    border-radius: 0;
+  }
+  .app-container.view-chat header {
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0;
+  }
+  /* Remove glass-panel border-radius on the chat container in full-screen mode */
+  .app-container.view-chat .chat-container {
+    border-radius: 0;
+  }
 }
 
 /* Glassmorphism Classes */
