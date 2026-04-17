@@ -242,11 +242,18 @@ function ChatRoom({ socket, partner, mode, onNext }) {
 
   const initializeWebRTC = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/webrtc/ice-servers`);
-      const iceServers = response.data.iceServers || [
+      let iceServers = [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
       ];
+      try {
+        const response = await axios.get(`${API_URL}/api/webrtc/ice-servers`);
+        if (response.data && response.data.iceServers) {
+          iceServers = response.data.iceServers;
+        }
+      } catch (axErr) {
+        console.warn('[WebRTC] Failed to fetch TURN servers, falling back to STUN:', axErr.message);
+      }
 
       const pc = new RTCPeerConnection({ iceServers });
       peerConnection.current = pc;
