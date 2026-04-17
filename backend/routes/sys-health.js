@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { redisClient } from '../server.js';
 import { logger } from '../config/logger.js';
 
-export const adminRouter = Router();
+export const sysHealthRouter = Router();
 
 // Middleware to check API key/password
 const requireAdminAuth = (req, res, next) => {
@@ -19,13 +19,13 @@ const requireAdminAuth = (req, res, next) => {
 };
 
 // All admin routes are protected
-adminRouter.use(requireAdminAuth);
+sysHealthRouter.use(requireAdminAuth);
 
 /**
- * GET /api/admin/reports
+ * GET /api/sys-health/reports
  * Fetches all user reports
  */
-adminRouter.get('/reports', async (req, res) => {
+sysHealthRouter.get('/reports', async (req, res) => {
   try {
     const listCount = await redisClient.lLen('moderation:reports');
     if (listCount === 0) return res.json({ reports: [] });
@@ -54,10 +54,10 @@ adminRouter.get('/reports', async (req, res) => {
 });
 
 /**
- * DELETE /api/admin/reports
+ * DELETE /api/sys-health/reports
  * Clears ALL reports. Passing index isn't safe with high concurrency list pushes.
  */
-adminRouter.delete('/reports', async (req, res) => {
+sysHealthRouter.delete('/reports', async (req, res) => {
   try {
     await redisClient.del('moderation:reports');
     res.json({ success: true, message: 'All reports cleared.' });

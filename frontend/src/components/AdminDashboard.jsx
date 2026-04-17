@@ -18,7 +18,7 @@ export default function AdminDashboard({ onExit }) {
     
     const bearer = `Bearer ${password}`;
     try {
-      const res = await axios.get(`${API_URL}/api/admin/reports`, {
+      const res = await axios.get(`${API_URL}/api/sys-health/reports`, {
         headers: { Authorization: bearer }
       });
       setAuthHeader(bearer);
@@ -33,7 +33,7 @@ export default function AdminDashboard({ onExit }) {
   const fetchReports = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/api/admin/reports`, {
+      const res = await axios.get(`${API_URL}/api/sys-health/reports`, {
         headers: { Authorization: authHeader }
       });
       setData(res.data);
@@ -51,7 +51,7 @@ export default function AdminDashboard({ onExit }) {
   const clearAllReports = async () => {
     if (!window.confirm("Delete ALL reports completely?")) return;
     try {
-      await axios.delete(`${API_URL}/api/admin/reports`, {
+      await axios.delete(`${API_URL}/api/sys-health/reports`, {
         headers: { Authorization: authHeader }
       });
       fetchReports();
