@@ -88,10 +88,9 @@ function Entrance({ onRegister }) {
         .entrance-container {
           padding: 3rem;
           max-width: 500px;
-          margin: 4rem auto;
+          margin: 2rem auto;
           text-align: center;
           position: relative;
-          overflow: hidden;
         }
         .entrance-container::before {
           content: '';
@@ -150,15 +149,15 @@ function Entrance({ onRegister }) {
           background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
         }
         @media (max-width: 900px) {
-          .entrance-container { padding: 2.5rem; margin: 2rem auto; }
+          .entrance-container { padding: 2.5rem; margin: 1.5rem auto; }
           h1 { font-size: 2rem; }
         }
         @media (max-width: 600px) {
-          .entrance-container { padding: 1.75rem 1.25rem; margin: 1rem auto; border-radius: 16px; }
+          .entrance-container { padding: 1.5rem 1.25rem; margin: 0.75rem auto; border-radius: 16px; }
           h1 { font-size: 1.6rem; }
-          .subtitle { font-size: 0.95rem; margin-bottom: 1.5rem; }
-          .form-group { margin-bottom: 1.25rem; }
-          .start-btn { font-size: 1rem; padding: 1rem; }
+          .subtitle { font-size: 0.95rem; margin-bottom: 1.25rem; }
+          .form-group { margin-bottom: 1rem; }
+          .start-btn { font-size: 1rem; padding: 0.9rem; margin-top: 1rem; }
         }
       `}</style>
     </motion.div>

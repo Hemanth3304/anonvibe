@@ -73,7 +73,7 @@ function App() {
     };
 
     return (
-      <div className="app-container">
+      <div className={`app-container${view === 'chat' ? ' view-chat' : ''}`}>
         <header>
           <div className="logo">AnonVibe</div>
           <div className="header-right">
