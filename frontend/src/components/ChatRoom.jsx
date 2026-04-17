@@ -261,8 +261,13 @@ function ChatRoom({ socket, partner, mode, onNext }) {
       // ── Remote stream received ──
       pc.ontrack = (event) => {
         console.log('[WebRTC] ontrack fired', event.streams);
-        if (remoteVideoRef.current && event.streams && event.streams[0]) {
-          remoteVideoRef.current.srcObject = event.streams[0];
+        if (remoteVideoRef.current) {
+          if (event.streams && event.streams.length > 0) {
+            remoteVideoRef.current.srcObject = event.streams[0];
+          } else {
+            let inboundStream = new MediaStream([event.track]);
+            remoteVideoRef.current.srcObject = inboundStream;
+          }
         }
       };
 
@@ -455,7 +460,7 @@ function ChatRoom({ socket, partner, mode, onNext }) {
         {mode === 'video' && (
           <div className="video-section">
             <div className="video-container local">
-              <video ref={localVideoRef} autoPlay playsInline muted />
+              <video ref={localVideoRef} autoPlay playsInline={true} muted />
               
               <div className="local-video-settings">
                 <div className="inner-video-settings">
@@ -489,7 +494,7 @@ function ChatRoom({ socket, partner, mode, onNext }) {
               <button className="report-btn" onClick={() => socket.emit('user:report')} title="Report User">
                 <Flag size={20} />
               </button>
-              <video ref={remoteVideoRef} autoPlay playsInline />
+              <video ref={remoteVideoRef} autoPlay playsInline={true} />
             </div>
           </div>
         )}

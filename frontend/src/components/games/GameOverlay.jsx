@@ -277,8 +277,8 @@ export default function GameOverlay({ socket, gameState, onAccept, onStart, onCl
         .game-icon-btn:hover { background: rgba(239,68,68,0.2); }
 
         @media (max-width: 600px) {
-          .game-overlay-panel { max-height: 95vh; border-radius: 16px; }
-          .game-phase-center { padding: 2rem 1.25rem; }
+          .game-overlay-panel { max-height: 95vh; border-radius: 16px; margin: 0 0.5rem; width: auto; box-sizing: border-box; }
+          .game-phase-center { padding: 1.5rem 1rem; }
           .game-big-emoji { font-size: 3rem; }
         }
       `}</style>

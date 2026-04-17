@@ -206,6 +206,11 @@ export default function NeverHaveIEver({ socket, firstTurn, onEnd }) {
         .nhie-reveal-box.no  { background: rgba(239,68,68,0.1);  border: 1px solid #ef4444; }
         .nhie-match { font-size: 0.95rem; font-weight: 700; color: var(--accent-primary); }
         .nhie-actions { display: flex; gap: 0.75rem; }
+        @media (max-width: 600px) {
+          .nhie-wrap { padding: 1rem 0.5rem; }
+          .nhie-resp-btn { padding: 0.75rem 1rem; font-size: 0.85rem; }
+          .nhie-phase { gap: 0.5rem; }
+        }
       `}</style>
     </div>
   );

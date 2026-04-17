@@ -272,6 +272,11 @@ export default function TruthOrDare({ socket, firstTurn, onEnd }) {
           text-align: left;
         }
         .game-btn.success { background: #22c55e; color: #fff; }
+        @media (max-width: 600px) {
+          .tod-wrap { padding: 1rem 0.5rem; }
+          .tod-choice { padding: 0.75rem 1rem; font-size: 0.95rem; }
+          .tod-phase { gap: 0.5rem; }
+        }
       `}</style>
     </div>
   );
