@@ -7,6 +7,8 @@ import GameButton  from './games/GameButton';
 import GameOverlay from './games/GameOverlay';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+console.log('[AnonVibe] API_URL:', API_URL);
+
 
 function ChatRoom({ socket, partner, mode, onNext }) {
   const [messages, setMessages] = useState([]);
@@ -185,17 +187,18 @@ function ChatRoom({ socket, partner, mode, onNext }) {
     }
   }, [mode]);
 
-  const setupMediaStream = async () => {
-    const constraints = {
+  const setupMediaStream = async (fallbackConstraints = null) => {
+    const constraints = fallbackConstraints || {
       video: {
         deviceId: selectedVideo ? { exact: selectedVideo } : undefined,
-        facingMode: isFlipped ? 'environment' : 'user'
+        facingMode: isFlipped ? 'environment' : 'user',
+        width: { ideal: 640 },
+        height: { ideal: 480 }
       },
       audio: {
         deviceId: selectedAudio ? { exact: selectedAudio } : undefined,
         echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
+        noiseSuppression: true
       }
     };
     
@@ -228,6 +231,20 @@ function ChatRoom({ socket, partner, mode, onNext }) {
 
     } catch (err) {
       console.error('Failed to setup media stream', err);
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      // If specific deviceId failed, retry with defaults
+      if (!fallbackConstraints && (constraints.video.deviceId || constraints.audio.deviceId)) {
+        console.warn('Selected device failed, retrying with defaults...');
+        return setupMediaStream({ video: { facingMode: isFlipped ? 'environment' : 'user' }, audio: true });
+      }
+
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        text: `System: Camera/Mic error (${err.name}). ${isMobile ? 'Please ensure you granted permissions and are using HTTPS.' : ''}`,
+        from: 'system',
+        timestamp: Date.now()
+      }]);
     }
   };
 
@@ -267,14 +284,22 @@ function ChatRoom({ socket, partner, mode, onNext }) {
 
       // ── Remote stream received ──
       pc.ontrack = (event) => {
-        console.log('[WebRTC] ontrack fired', event.streams);
+        console.log('[WebRTC] ontrack fired', event.track.kind);
         if (remoteVideoRef.current) {
-          if (event.streams && event.streams.length > 0) {
+          if (event.streams && event.streams[0]) {
             remoteVideoRef.current.srcObject = event.streams[0];
           } else {
-            let inboundStream = new MediaStream([event.track]);
-            remoteVideoRef.current.srcObject = inboundStream;
+            // Safari/Mobile fallback: manage a composite stream
+            if (!remoteVideoRef.current.srcObject) {
+              remoteVideoRef.current.srcObject = new MediaStream();
+            }
+            const stream = remoteVideoRef.current.srcObject;
+            if (!stream.getTracks().find(t => t.id === event.track.id)) {
+              stream.addTrack(event.track);
+            }
           }
+          // Force play for mobile browsers that suspend video
+          remoteVideoRef.current.play().catch(e => console.warn('[WebRTC] Remote play deferred:', e));
         }
       };
 
