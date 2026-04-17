@@ -14,12 +14,7 @@ export default function GameButton({ onRequest, cooldown }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+
 
   const handleSelect = (gameId) => {
     setOpen(false);
@@ -43,14 +38,18 @@ export default function GameButton({ onRequest, cooldown }) {
           <div className="game-menu glass-panel" onClick={e => e.stopPropagation()}>
             <div className="game-menu-header">
               <span>🎮 Choose a Game</span>
-              <button onClick={() => setOpen(false)}>✕</button>
+              <button type="button" onClick={() => setOpen(false)}>✕</button>
             </div>
             <div className="game-list">
               {GAMES.map(g => (
                 <button
                   key={g.id}
+                  type="button"
                   className="game-list-item"
-                  onClick={() => handleSelect(g.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelect(g.id);
+                  }}
                 >
                   <span className="game-list-emoji">{g.emoji}</span>
                   <div className="game-list-info">
