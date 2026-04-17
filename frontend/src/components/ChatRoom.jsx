@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import imageCompression from 'browser-image-compression';
 import { Send, Image as ImageIcon, Loader2, Mic, MicOff, Video as VideoIcon, VideoOff, Flag, RefreshCw, Smile, Sticker } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import GameButton  from './games/GameButton';
@@ -388,11 +389,20 @@ function ChatRoom({ socket, partner, mode, onNext }) {
   };
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
+    let file = e.target.files[0];
     if (!file) return;
 
     setUploading(true);
     try {
+      if (file.type.startsWith('image/')) {
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true
+        };
+        file = await imageCompression(file, options);
+      }
+
       const res = await axios.post(`${API_URL}/api/media/presigned-url`, {
         fileName: file.name,
         fileType: file.type

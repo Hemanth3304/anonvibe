@@ -1,7 +1,8 @@
-# render.yaml — Render.com free hosting config for AnonVibe backend
+# render.yaml — Render.com full stack config for AnonVibe
 # Push this file to GitHub root, then go to render.com → "New Blueprint"
 
 services:
+  # ── Backend ──
   - type: web
     name: anonvibe-backend
     runtime: node
@@ -14,6 +15,19 @@ services:
         value: production
       - key: PORT
         value: 3001
-      # Set these manually in Render dashboard after deploy:
-      # FRONTEND_URL, REDIS_URL, POSTGRES_HOST, POSTGRES_USER,
-      # POSTGRES_PASSWORD, POSTGRES_DB
+      # IMPORTANT: Add these manually in Render dashboard:
+      # FRONTEND_URL, REDIS_URL, ADMIN_PASSWORD
+
+  # ── Frontend ──
+  - type: web
+    name: anonvibe-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: anonvibe-backend
+          envVarKey: RENDER_EXTERNAL_URL

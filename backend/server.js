@@ -18,6 +18,7 @@ import { roomService }     from './services/roomService.js';
 import { mediaRouter }     from './routes/media.js';
 import { statsRouter }     from './routes/stats.js';
 import { webrtcRouter }    from './routes/webrtc.js';
+import { adminRouter }     from './routes/admin.js';
 import { setupSocketHandlers } from './socket/handlers.js';
 import { logger }          from './config/logger.js';
 import { redisConfig }     from './config/redis.js';
@@ -83,6 +84,7 @@ app.use('/api/', limiter);
 app.use('/api/media', mediaRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/webrtc', webrtcRouter);
+app.use('/api/admin', adminRouter);
 
 app.get('/api/health', async (req, res) => {
   try {

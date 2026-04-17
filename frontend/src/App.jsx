@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import Entrance from './components/Entrance';
 import ChatRoom from './components/ChatRoom';
+import AdminDashboard from './components/AdminDashboard';
 import './index.css';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -45,7 +46,17 @@ function App() {
       setView('entrance');
     });
 
-    return () => newSocket.close();
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'l') {
+        setView('admin');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      newSocket.close();
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const handleRegister = (data) => {
@@ -123,6 +134,10 @@ function App() {
               mode={profile?.mode || 'text'}
               onNext={handleNext} 
             />
+          )}
+
+          {view === 'admin' && (
+            <AdminDashboard onExit={() => setView('entrance')} />
           )}
         </main>
 
