@@ -188,6 +188,55 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
       if (profile) await matchingService.dequeue(redis, profile);
     });
 
+    // ─────────────────────────────────────────────────────────────
+    // ── 🎮 GAME EVENTS ────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────
+    const gameRelay = (event) => {
+      socket.on(event, (payload) => {
+        const profile = guests.get(socket.id);
+        if (!profile?.roomId) return;
+        socket.to(profile.roomId).emit(event, { ...payload, from: socket.id });
+      });
+    };
+
+    // Simple relay events — just forward to partner
+    gameRelay('game:request');
+    gameRelay('game:accept');
+    gameRelay('game:reject');
+    gameRelay('game:cancel');
+    gameRelay('game:move');
+    gameRelay('game:message');
+    gameRelay('game:response');
+    gameRelay('game:skip');
+    gameRelay('game:end');
+    gameRelay('game:start_confirmed');
+
+    // Coin toss — server decides the result to prevent cheating
+    const tossState = new Map(); // roomId → { myId: choice, ... }
+    socket.on('game:toss', ({ choice }) => {
+      const profile = guests.get(socket.id);
+      if (!profile?.roomId) return;
+
+      const roomId = profile.roomId;
+      if (!tossState.has(roomId)) tossState.set(roomId, {});
+      const room = tossState.get(roomId);
+      room[socket.id] = choice;
+
+      // Relay my choice to partner so they know I've picked
+      socket.to(roomId).emit('game:toss_peer_chosen', { from: socket.id });
+
+      // If both players have chosen, decide the result
+      const sockets = Object.keys(room);
+      if (sockets.length === 2) {
+        const result   = Math.random() < 0.5 ? 'heads' : 'tails';
+        const winnerId = result === room[sockets[0]] ? sockets[0] : sockets[1];
+        const loserId  = winnerId === sockets[0] ? sockets[1] : sockets[0];
+
+        io.to(winnerId).emit('game:toss_result', { result, winner: 'me' });
+        io.to(loserId ).emit('game:toss_result', { result, winner: 'them' });
+        tossState.delete(roomId);
+      }
+    });
 
     // ── 8. REPORT USER ───────────────────────────────────────────
     socket.on('user:report', async ({ reason }) => {

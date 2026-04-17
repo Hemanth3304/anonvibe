@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Send, Image as ImageIcon, Loader2, Mic, MicOff, Video as VideoIcon, VideoOff, Flag, RefreshCw, Smile, Sticker } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
+import GameButton  from './games/GameButton';
+import GameOverlay from './games/GameOverlay';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -22,6 +24,12 @@ function ChatRoom({ socket, partner, mode, onNext }) {
   const [gifs, setGifs] = useState([]);
   const [gifSearch, setGifSearch] = useState('');
 
+  // ── Game state ──────────────────────────────────────────────────
+  const [gameState, setGameState] = useState(null);
+  // gameState: { phase, game, incomingGame, firstTurn }
+  const [gameCooldown, setGameCooldown] = useState(0);
+  const cooldownRef = useRef(null);
+
   const scrollRef = useRef();
   const fileInputRef = useRef();
   
@@ -35,16 +43,84 @@ function ChatRoom({ socket, partner, mode, onNext }) {
     socket.on('chat:message', (msg) => {
       setMessages((prev) => [...prev, msg]);
     });
-
     socket.on('chat:typing', ({ typing }) => {
       setIsTyping(typing);
+    });
+
+    // ── Game socket events ──────────────────────────────────────
+    socket.on('game:request', ({ game }) => {
+      setGameState({ phase: 'request_received', incomingGame: game, game: null, firstTurn: null });
+    });
+    socket.on('game:accept', ({ game }) => {
+      const hasToss = game === 'truthordare' || game === 'neverhaveiever';
+      setGameState(prev => ({
+        ...prev,
+        phase: hasToss ? 'toss' : 'playing',
+        game,
+        firstTurn: 'me', // offerer goes first for board games
+      }));
+    });
+    socket.on('game:reject', () => {
+      setGameState(null);
+      setMessages(prev => [...prev, { id: Date.now(), from: 'system', text: 'Stranger declined the game invite.', timestamp: Date.now() }]);
+    });
+    socket.on('game:cancel', () => {
+      setGameState(null);
+      setMessages(prev => [...prev, { id: Date.now(), from: 'system', text: 'Game request cancelled.', timestamp: Date.now() }]);
+    });
+    socket.on('game:end', () => {
+      startCooldown();
+      setGameState(prev => prev ? { ...prev, phase: 'ended' } : null);
+    });
+    // When we accepted, server also signals to start toss or playing
+    socket.on('game:start_confirmed', () => {
+      setGameState(prev => prev ? { ...prev, phase: 'playing' } : null);
     });
 
     return () => {
       socket.off('chat:message');
       socket.off('chat:typing');
+      socket.off('game:request');
+      socket.off('game:accept');
+      socket.off('game:reject');
+      socket.off('game:cancel');
+      socket.off('game:end');
+      socket.off('game:start_confirmed');
     };
   }, [socket]);
+
+  const startCooldown = () => {
+    setGameCooldown(15);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setGameCooldown(prev => {
+        if (prev <= 1) { clearInterval(cooldownRef.current); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleGameRequest = (gameId) => {
+    if (gameCooldown > 0) return;
+    socket.emit('game:request', { game: gameId });
+    setGameState({ phase: 'request_sent', game: gameId, incomingGame: null, firstTurn: null });
+  };
+
+  const handleGameAccept = (incomingGame) => {
+    const hasToss = incomingGame === 'truthordare' || incomingGame === 'neverhaveiever';
+    socket.emit('game:accept', { game: incomingGame });
+    setGameState(prev => ({
+      ...prev,
+      phase: hasToss ? 'toss' : 'playing',
+      game: incomingGame,
+      firstTurn: 'them', // accepter goes second for board games
+    }));
+  };
+
+  const handleGameClose = () => {
+    startCooldown();
+    setGameState(null);
+  };
 
   useEffect(() => {
     if (mode === 'video') {
@@ -510,7 +586,9 @@ function ChatRoom({ socket, partner, mode, onNext }) {
             <Smile size={20} />
           </button>
 
-          <input 
+          <GameButton onRequest={handleGameRequest} cooldown={gameCooldown} />
+
+          <input
             value={inputText}
             onChange={handleTyping}
             placeholder="Type a message..."
@@ -521,6 +599,19 @@ function ChatRoom({ socket, partner, mode, onNext }) {
           </button>
         </form>
       </div>
+
+      {/* Game overlay — rendered outside .chat-main so it covers everything */}
+      {gameState && (
+        <GameOverlay
+          socket={socket}
+          gameState={{
+            ...gameState,
+            // Override accept handler for request_received phase
+          }}
+          onAccept={handleGameAccept}
+          onClose={handleGameClose}
+        />
+      )}
 
       <style>{`
         /* ===== BASE CHAT LAYOUT ===== */
