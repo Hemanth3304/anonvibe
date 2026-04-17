@@ -349,7 +349,7 @@ function ChatRoom({ socket, partner, mode, onNext }) {
       console.error('[WebRTC] Init failed:', err);
       setMessages(prev => [...prev, {
         id: Date.now(),
-        text: 'System: Failed to access camera/microphone.',
+        text: `System WebRTC Error: ${err.name} - ${err.message}`,
         from: 'system',
         timestamp: Date.now()
       }]);
