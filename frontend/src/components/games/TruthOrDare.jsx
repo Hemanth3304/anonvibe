@@ -2,109 +2,127 @@
 import React, { useState, useEffect, useRef } from 'react';
 import EmojiPicker from 'emoji-picker-react';
 
-// phase: 'choose'|'asking'|'responding'|'done'
+// phase: 'start'|'choose'|'asking'|'responding'|'done'
 export default function TruthOrDare({ socket, firstTurn, onEnd }) {
-  const iAmFirst = firstTurn === 'me';
-
-  // 'chooser' = person picking T or D, 'asker' = person writing the question
-  const [role,       setRole]       = useState(iAmFirst ? 'chooser' : 'asker');
-  const [choice,     setChoice]     = useState(null);  // 'truth' | 'dare'
-  const [phase,      setPhase]      = useState('choose'); // choose → asking → responding → done
-  const [question,   setQuestion]   = useState('');
-  const [answer,     setAnswer]     = useState('');
-  const [received,   setReceived]   = useState(null);  // what the other side sent
-  const [showEmoji,  setShowEmoji]  = useState(false);
-  const [rounds,     setRounds]     = useState(0);
+  const [myTurn, setMyTurn] = useState(firstTurn === 'me');
+  const [phase, setPhase] = useState('start');
+  const [choice, setChoice] = useState(null); // 'truth' | 'dare'
+  const [question, setQuestion] = useState('');
+  const [answer, setAnswer] = useState('');
+  const [receivedQuestion, setReceivedQuestion] = useState(null);
+  const [receivedAnswer, setReceivedAnswer] = useState(null);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [rounds, setRounds] = useState(0);
   const inputRef = useRef(null);
 
   useEffect(() => {
     socket.on('game:message', ({ type, value }) => {
-      if (type === 'tod:choice') {
+      if (type === 'tod:ask') {
+        setPhase('choose');
+      }
+      else if (type === 'tod:choice') {
         setChoice(value);
         setPhase('asking');
       }
-      if (type === 'tod:question') {
-        setReceived(value);
+      else if (type === 'tod:question') {
+        setReceivedQuestion(value);
         setPhase('responding');
         setTimeout(() => inputRef.current?.focus(), 100);
       }
-      if (type === 'tod:answer') {
-        setReceived(value);
+      else if (type === 'tod:answer') {
+        setReceivedAnswer(value);
         setPhase('done');
+      }
+      else if (type === 'tod:next') {
+        handleNextRound();
       }
     });
     return () => socket.off('game:message');
   }, [socket]);
 
-  const sendChoice = (c) => {
+  const handleNextRound = () => {
+    setMyTurn(prev => !prev);
+    setPhase('start');
+    setChoice(null);
+    setQuestion('');
+    setAnswer('');
+    setReceivedQuestion(null);
+    setReceivedAnswer(null);
+    setRounds(r => r + 1);
+  };
+
+  const executeAsk = () => {
+    socket.emit('game:message', { type: 'tod:ask' });
+    setPhase('choose');
+  };
+
+  const executeChoice = (c) => {
     setChoice(c);
     socket.emit('game:message', { type: 'tod:choice', value: c });
     setPhase('asking');
-    // Now it's asker's turn on this side
-    setRole('asker');
   };
 
-  const sendQuestion = () => {
+  const executeQuestion = () => {
     if (!question.trim()) return;
-    socket.emit('game:message', { type: 'tod:question', value: question.trim() });
-    setReceived(question.trim());
-    setQuestion('');
+    const q = question.trim();
+    socket.emit('game:message', { type: 'tod:question', value: q });
+    setReceivedQuestion(q);
     setPhase('responding');
-    setRole('responder');
   };
 
-  const sendAnswer = () => {
+  const executeAnswer = () => {
     if (!answer.trim()) return;
-    socket.emit('game:message', { type: 'tod:answer', value: answer.trim() });
-    setAnswer('');
+    const a = answer.trim();
+    socket.emit('game:message', { type: 'tod:answer', value: a });
+    setReceivedAnswer(a);
     setPhase('done');
   };
 
-  const nextRound = () => {
-    setRounds(r => r + 1);
-    setPhase('choose');
-    setChoice(null);
-    setReceived(null);
-    // Swap who chooses
-    setRole(prev => prev === 'chooser' ? 'asker' : 'chooser');
-    socket.emit('game:message', { type: 'tod:choice', value: '__next_round__' });
+  const executeNext = () => {
+    socket.emit('game:message', { type: 'tod:next' });
+    handleNextRound();
   };
-
-  useEffect(() => {
-    socket.on('game:message', ({ type }) => {
-      if (type === 'tod:choice' && received === '__next_round__') {
-        setPhase('choose');
-        setChoice(null);
-        setReceived(null);
-        setRole(r => r === 'chooser' ? 'asker' : 'chooser');
-      }
-    });
-  }, [socket, received]);
 
   return (
     <div className="tod-wrap">
       <div className="tod-badge">{choice ? (choice === 'truth' ? '🤍 Truth' : '🔥 Dare') : '🎭 Truth or Dare'}</div>
       <div className="tod-round">Round {rounds + 1}</div>
 
-      {/* ── Choose phase: chooser picks ── */}
-      {phase === 'choose' && role === 'chooser' && (
+      {/* ── Phase 1: Start ── */}
+      {phase === 'start' && myTurn && (
         <div className="tod-phase">
-          <p className="tod-prompt">Your turn — pick one!</p>
+          <p className="tod-prompt">Your turn! Ask the stranger:</p>
+          <button className="tod-choice truth" style={{ borderColor: 'var(--accent-primary)', color: 'var(--text-main)', background: 'var(--glass)'}} onClick={executeAsk}>
+            🎭 Truth or Dare?
+          </button>
+        </div>
+      )}
+      {phase === 'start' && !myTurn && (
+        <div className="tod-phase waiting">
+           <div className="game-pulse-ring" />
+           <p>Waiting for stranger to ask you Truth or Dare…</p>
+        </div>
+      )}
+
+      {/* ── Phase 2: Choose ── */}
+      {phase === 'choose' && !myTurn && (
+        <div className="tod-phase">
+          <p className="tod-prompt">Stranger asks: Truth or Dare?</p>
           <div className="tod-choice-row">
-            <button className="tod-choice truth" onClick={() => sendChoice('truth')}>🤍 Truth</button>
-            <button className="tod-choice dare"  onClick={() => sendChoice('dare')}>🔥 Dare</button>
+            <button className="tod-choice truth" onClick={() => executeChoice('truth')}>🤍 Truth</button>
+            <button className="tod-choice dare"  onClick={() => executeChoice('dare')}>🔥 Dare</button>
           </div>
         </div>
       )}
-      {phase === 'choose' && role === 'asker' && (
+      {phase === 'choose' && myTurn && (
         <div className="tod-phase waiting">
           <div className="game-pulse-ring" />
           <p>Waiting for stranger to choose Truth or Dare…</p>
         </div>
       )}
 
-      {/* ── Asking phase: asker types question ── */}
-      {phase === 'asking' && role === 'asker' && (
+      {/* ── Phase 3: Asking ── */}
+      {phase === 'asking' && myTurn && (
         <div className="tod-phase">
           <p className="tod-prompt">
             Stranger chose <strong>{choice}</strong> — type your {choice}!
@@ -132,24 +150,24 @@ export default function TruthOrDare({ socket, firstTurn, onEnd }) {
               />
             </div>
           )}
-          <button className="game-btn primary" onClick={sendQuestion} disabled={!question.trim()}>
-            Send →
+          <button className="game-btn primary" onClick={executeQuestion} disabled={!question.trim()}>
+            Send Question →
           </button>
         </div>
       )}
-      {phase === 'asking' && role === 'chooser' && (
+      {phase === 'asking' && !myTurn && (
         <div className="tod-phase waiting">
           <div className="game-pulse-ring" />
           <p>Stranger is writing your <strong>{choice}</strong>…</p>
         </div>
       )}
 
-      {/* ── Responding phase ── */}
-      {phase === 'responding' && role === 'responder' && (
+      {/* ── Phase 4: Responding ── */}
+      {phase === 'responding' && !myTurn && (
         <div className="tod-phase">
           <div className="tod-question-card">
             <span className="tod-q-label">{choice === 'truth' ? '🤍 Truth' : '🔥 Dare'}</span>
-            <p className="tod-question-text">"{received}"</p>
+            <p className="tod-question-text">"{receivedQuestion}"</p>
           </div>
           <div className="tod-input-row">
             <textarea
@@ -162,33 +180,38 @@ export default function TruthOrDare({ socket, firstTurn, onEnd }) {
               maxLength={500}
             />
           </div>
-          <button className="game-btn success" onClick={sendAnswer} disabled={!answer.trim()}>
+          <button className="game-btn success" onClick={executeAnswer} disabled={!answer.trim()}>
             Submit Answer ✓
           </button>
         </div>
       )}
-      {phase === 'responding' && role !== 'responder' && (
+      {phase === 'responding' && myTurn && (
         <div className="tod-phase waiting">
           <div className="tod-question-card">
-            <span className="tod-q-label">You asked:</span>
-            <p className="tod-question-text">"{received}"</p>
+            <span className="tod-q-label">You Asked:</span>
+            <p className="tod-question-text">"{receivedQuestion}"</p>
           </div>
           <div className="game-pulse-ring" />
-          <p>Waiting for answer…</p>
+          <p>Waiting for their answer…</p>
         </div>
       )}
 
-      {/* ── Done phase: show answer ── */}
+      {/* ── Phase 5: Done ── */}
       {phase === 'done' && (
         <div className="tod-phase">
+          <div className="tod-question-card" style={{ opacity: 0.8, marginBottom: '-0.5rem' }}>
+            <span className="tod-q-label">{choice}</span>
+            <p className="tod-question-text" style={{ fontSize: '0.9rem' }}>"{receivedQuestion}"</p>
+          </div>
           <div className="tod-answer-card">
             <span className="tod-q-label">✅ Answer</span>
-            <p className="tod-question-text">"{received}"</p>
+            <p className="tod-question-text">"{receivedAnswer}"</p>
           </div>
           <div className="tod-choice-row">
-            <button className="game-btn primary" onClick={nextRound}>Next Round →</button>
-            <button className="game-btn danger"  onClick={() => onEnd('Game ended')}>End Game</button>
+            {myTurn && <button className="game-btn primary" onClick={executeNext}>Next Round →</button>}
+            {!myTurn && <p className="tod-prompt" style={{width: '100%'}}>Waiting for stranger to start next round...</p>}
           </div>
+          <button className="game-btn danger" style={{marginTop: '1rem'}} onClick={() => onEnd('Game ended')}>End Game</button>
         </div>
       )}
 

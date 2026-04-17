@@ -4,70 +4,57 @@ import React, { useState, useEffect } from 'react';
 export default function NeverHaveIEver({ socket, firstTurn, onEnd }) {
   const iAmFirst = firstTurn === 'me';
 
-  const [phase,       setPhase]       = useState('writing');   // writing | waiting_response | revealing | done
-  const [isWriter,    setIsWriter]    = useState(iAmFirst);
+  const [phase,       setPhase]       = useState('writing');   // writing | responding | done
+  const [myTurn,      setMyTurn]      = useState(iAmFirst);    // whose turn it is to write the prompt
   const [statement,   setStatement]   = useState('');
-  const [myResponse,  setMyResponse]  = useState(null);        // 'yes' | 'no' | null
-  const [theirResp,   setTheirResp]   = useState(null);
+  const [givenAnswer, setGivenAnswer] = useState(null);        // 'yes' | 'no'
   const [currentStmt, setCurrentStmt] = useState('');
   const [rounds,      setRounds]      = useState(0);
-  const [scores,      setScores]      = useState({ yes_me: 0, yes_them: 0 });
 
   useEffect(() => {
     socket.on('game:message', ({ type, value }) => {
       if (type === 'nhie:statement') {
         setCurrentStmt(value);
         setPhase('responding');
-        setMyResponse(null);
-        setTheirResp(null);
+        setGivenAnswer(null);
       }
-      if (type === 'nhie:response') {
-        setTheirResp(value);
+      else if (type === 'nhie:response') {
+        setGivenAnswer(value);
+        setPhase('done');
       }
-      if (type === 'nhie:next') {
-        setRounds(r => r + 1);
-        setPhase('writing');
-        setIsWriter(w => !w);
-        setStatement('');
-        setMyResponse(null);
-        setTheirResp(null);
-        setCurrentStmt('');
+      else if (type === 'nhie:next') {
+        handleNextRound();
       }
     });
     return () => socket.off('game:message');
   }, [socket]);
 
-  // When both responses are in, reveal
-  useEffect(() => {
-    if (myResponse && theirResp) {
-      setPhase('revealing');
-      if (myResponse === 'yes')   setScores(s => ({ ...s, yes_me: s.yes_me + 1 }));
-      if (theirResp === 'yes')    setScores(s => ({ ...s, yes_them: s.yes_them + 1 }));
-    }
-  }, [myResponse, theirResp]);
+  const handleNextRound = () => {
+    setRounds(r => r + 1);
+    setPhase('writing');
+    setMyTurn(w => !w);
+    setStatement('');
+    setGivenAnswer(null);
+    setCurrentStmt('');
+  };
 
   const sendStatement = () => {
     if (!statement.trim()) return;
-    setCurrentStmt(statement.trim());
-    socket.emit('game:message', { type: 'nhie:statement', value: statement.trim() });
-    setStatement('');
+    const s = statement.trim();
+    setCurrentStmt(s);
+    socket.emit('game:message', { type: 'nhie:statement', value: s });
     setPhase('responding');
   };
 
   const sendResponse = (val) => {
-    setMyResponse(val);
+    setGivenAnswer(val);
     socket.emit('game:message', { type: 'nhie:response', value: val });
+    setPhase('done');
   };
 
-  const nextRound = () => {
+  const executeNext = () => {
     socket.emit('game:message', { type: 'nhie:next' });
-    setRounds(r => r + 1);
-    setPhase('writing');
-    setIsWriter(w => !w);
-    setStatement('');
-    setMyResponse(null);
-    setTheirResp(null);
-    setCurrentStmt('');
+    handleNextRound();
   };
 
   return (
@@ -77,14 +64,10 @@ export default function NeverHaveIEver({ socket, firstTurn, onEnd }) {
         <span className="nhie-round">Round {rounds + 1}</span>
       </div>
 
-      {/* Scores */}
-      <div className="nhie-scores">
-        <div className="nhie-score-chip me">✅ You: {scores.yes_me} times</div>
-        <div className="nhie-score-chip them">✅ Stranger: {scores.yes_them} times</div>
-      </div>
+      {/* No scores shown now since it's just volley */}
 
       {/* Writing phase */}
-      {phase === 'writing' && isWriter && (
+      {phase === 'writing' && myTurn && (
         <div className="nhie-phase">
           <p className="nhie-label">Your turn — complete the sentence:</p>
           <div className="nhie-stmt-prefix">Never have I ever…</div>
@@ -98,11 +81,11 @@ export default function NeverHaveIEver({ socket, firstTurn, onEnd }) {
             autoFocus
           />
           <button className="game-btn primary" onClick={sendStatement} disabled={!statement.trim()}>
-            Send Statement →
+            Send Question →
           </button>
         </div>
       )}
-      {phase === 'writing' && !isWriter && (
+      {phase === 'writing' && !myTurn && (
         <div className="nhie-phase waiting">
           <div className="game-pulse-ring" />
           <p>Stranger is writing a statement…</p>
@@ -110,61 +93,52 @@ export default function NeverHaveIEver({ socket, firstTurn, onEnd }) {
       )}
 
       {/* Responding phase */}
-      {(phase === 'responding' || (phase === 'revealing' && !myResponse)) && currentStmt && (
+      {phase === 'responding' && !myTurn && (
         <div className="nhie-phase">
           <div className="nhie-card">
             <span className="nhie-card-prefix">Never have I ever…</span>
             <p className="nhie-card-stmt">{currentStmt}</p>
           </div>
-          {!myResponse ? (
-            <>
-              <p className="nhie-label">Have you?</p>
-              <div className="nhie-response-row">
-                <button className="nhie-resp-btn yes" onClick={() => sendResponse('yes')}>
-                  🙋 YES — I have
-                </button>
-                <button className="nhie-resp-btn no" onClick={() => sendResponse('no')}>
-                  🙅 NO — I haven't
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="nhie-waiting-them">
-              <p>You answered: <strong>{myResponse === 'yes' ? '🙋 YES' : '🙅 NO'}</strong></p>
-              <div className="game-pulse-ring" />
-              <p>Waiting for stranger's response…</p>
-            </div>
-          )}
+          <p className="nhie-label">Have you?</p>
+          <div className="nhie-response-row">
+            <button className="nhie-resp-btn yes" onClick={() => sendResponse('yes')}>
+              🙋 YES — I have
+            </button>
+            <button className="nhie-resp-btn no" onClick={() => sendResponse('no')}>
+              🙅 NO — I haven't
+            </button>
+          </div>
+        </div>
+      )}
+      {phase === 'responding' && myTurn && (
+        <div className="nhie-phase waiting">
+          <div className="nhie-card">
+            <span className="nhie-card-prefix">You Asked: Never have I ever…</span>
+            <p className="nhie-card-stmt">{currentStmt}</p>
+          </div>
+          <div className="game-pulse-ring" />
+          <p>Waiting for stranger's response…</p>
         </div>
       )}
 
       {/* Reveal */}
-      {phase === 'revealing' && myResponse && theirResp && (
+      {phase === 'done' && (
         <div className="nhie-phase">
           <div className="nhie-card">
             <span className="nhie-card-prefix">Never have I ever…</span>
             <p className="nhie-card-stmt">{currentStmt}</p>
           </div>
           <div className="nhie-reveal-row">
-            <div className={`nhie-reveal-box ${myResponse === 'yes' ? 'yes' : 'no'}`}>
-              <span>You</span>
-              <strong>{myResponse === 'yes' ? '🙋 YES' : '🙅 NO'}</strong>
-            </div>
-            <div className={`nhie-reveal-box ${theirResp === 'yes' ? 'yes' : 'no'}`}>
-              <span>Stranger</span>
-              <strong>{theirResp === 'yes' ? '🙋 YES' : '🙅 NO'}</strong>
+            <div className={`nhie-reveal-box ${givenAnswer === 'yes' ? 'yes' : 'no'}`}>
+              <span>{myTurn ? 'Stranger has' : 'You have'}</span>
+              <strong>{givenAnswer === 'yes' ? '🙋 DONE IT' : '🙅 NOT DONE IT'}</strong>
             </div>
           </div>
-          {myResponse === 'yes' && theirResp === 'yes' && (
-            <p className="nhie-match">🎉 You both have!</p>
-          )}
-          {myResponse === 'no' && theirResp === 'no' && (
-            <p className="nhie-match">🤝 Neither of you have!</p>
-          )}
           <div className="nhie-actions">
-            <button className="game-btn primary" onClick={nextRound}>Next Round →</button>
-            <button className="game-btn danger"  onClick={() => onEnd('Game ended')}>End</button>
+            {myTurn && <button className="game-btn primary" onClick={executeNext}>Next Round →</button>}
+            {!myTurn && <p className="nhie-label" style={{width: '100%', marginTop: '0.5rem'}}>Waiting for next round...</p>}
           </div>
+          <button className="game-btn danger" style={{marginTop: '0.5rem'}} onClick={() => onEnd('Game ended')}>End</button>
         </div>
       )}
 
@@ -220,7 +194,7 @@ export default function NeverHaveIEver({ socket, firstTurn, onEnd }) {
         .nhie-resp-btn.no  { background: rgba(239,68,68,0.15);  border-color: #ef4444; color: #ef4444; }
         .nhie-resp-btn.no:hover  { background: rgba(239,68,68,0.3); }
         .nhie-waiting-them { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
-        .nhie-reveal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; width: 100%; }
+        .nhie-reveal-row { display: grid; gap: 0.75rem; width: 100%; }
         .nhie-reveal-box {
           border-radius: 14px; padding: 0.75rem;
           display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
