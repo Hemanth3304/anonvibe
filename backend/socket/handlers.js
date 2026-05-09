@@ -211,6 +211,65 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
     gameRelay('game:end');
     gameRelay('game:start_confirmed');
 
+    // ── 🎮 PRIVATE ROOMS / INVITE A FRIEND ────────────────────────
+    socket.on('room:join_private', async ({ roomId }) => {
+      if (!roomId) return;
+      const profile = guests.get(socket.id);
+      if (!profile) return socket.emit('error', { message: 'Register first.' });
+
+      const privateRoomKey = `private_room:${roomId}`;
+      const waitingSocketId = await redis.get(privateRoomKey);
+
+      if (waitingSocketId && waitingSocketId !== socket.id) {
+        // Someone is waiting, pair them!
+        await redis.del(privateRoomKey);
+        
+        const partner = guests.get(waitingSocketId);
+        if (!partner) {
+          // Partner left while waiting, I become the new waiter
+          await redis.set(privateRoomKey, socket.id, 'EX', 3600);
+          socket.emit('room:waiting_private', { roomId });
+          return;
+        }
+
+        // Create the actual room
+        const realRoomId = await roomService.createRoom(redis, socket.id, waitingSocketId);
+
+        // Update both profiles
+        guests.get(socket.id).partnerId = waitingSocketId;
+        guests.get(socket.id).roomId    = realRoomId;
+        guests.get(waitingSocketId).partnerId = socket.id;
+        guests.get(waitingSocketId).roomId    = realRoomId;
+
+        socket.join(realRoomId);
+        io.sockets.sockets.get(waitingSocketId)?.join(realRoomId);
+
+        const payload = {
+          roomId: realRoomId,
+          partnerSocketId:  waitingSocketId,
+          partnerGender:    partner.gender,
+          partnerPreference: partner.preference || '',
+          partnerLocation:  await getFakeLocation(),
+          isPrivate: true
+        };
+
+        socket.emit('match:found', payload);
+        io.to(waitingSocketId).emit('match:found', {
+          ...payload,
+          partnerSocketId:  socket.id,
+          partnerGender:    profile.gender,
+          partnerPreference: profile.preference || '',
+        });
+
+        logger.info(`Private Room matched: ${roomId} [${socket.id} <-> ${waitingSocketId}]`);
+      } else {
+        // First one here, wait for friend
+        await redis.set(privateRoomKey, socket.id, 'EX', 3600); // 1h expiry
+        socket.emit('room:waiting_private', { roomId });
+        logger.info(`Guest waiting in private room: ${roomId} (${socket.id})`);
+      }
+    });
+
     // Coin toss — first person to click decides the toss instantly
     const tossState = new Set(); // roomId
     socket.on('game:toss', ({ choice }) => {

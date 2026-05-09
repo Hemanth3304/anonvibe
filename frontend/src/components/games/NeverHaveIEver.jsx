@@ -1,5 +1,6 @@
 // NeverHaveIEver.jsx — Player writes statement, both respond, simultaneous reveal
 import React, { useState, useEffect } from 'react';
+import { Share2 } from 'lucide-react';
 
 export default function NeverHaveIEver({ socket, firstTurn, onEnd }) {
   const iAmFirst = firstTurn === 'me';
@@ -55,6 +56,21 @@ export default function NeverHaveIEver({ socket, firstTurn, onEnd }) {
   const executeNext = () => {
     socket.emit('game:message', { type: 'nhie:next' });
     handleNextRound();
+  };
+
+  const handleShare = async () => {
+    const resText = givenAnswer === 'yes' ? '🙋 HAS DONE IT!' : '🙅 HAS NOT DONE IT!';
+    const text = `🍻 Never Have I Ever on AnonVibe!\n\nStatement: "Never have I ever ${currentStmt}"\nResult: ${myTurn ? 'Stranger' : 'You'} ${resText}\n\nJoin me on AnonVibe!`;
+    const url = window.location.origin;
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'AnonVibe Moment', text, url });
+      } else {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        alert('Copied to clipboard! Share it with your friends 🚀');
+      }
+    } catch (err) { console.error('Share failed:', err); }
   };
 
   return (
@@ -138,6 +154,9 @@ export default function NeverHaveIEver({ socket, firstTurn, onEnd }) {
             {myTurn && <button className="game-btn primary" onClick={executeNext}>Next Round →</button>}
             {!myTurn && <p className="nhie-label" style={{width: '100%', marginTop: '0.5rem'}}>Waiting for next round...</p>}
           </div>
+          <button className="game-btn share-moment-btn" onClick={handleShare}>
+            <Share2 size={16} /> Share this Moment
+          </button>
           <button className="game-btn danger" style={{marginTop: '0.5rem'}} onClick={() => onEnd('Game ended')}>End</button>
         </div>
       )}
@@ -206,6 +225,21 @@ export default function NeverHaveIEver({ socket, firstTurn, onEnd }) {
         .nhie-reveal-box.no  { background: rgba(239,68,68,0.1);  border: 1px solid #ef4444; }
         .nhie-match { font-size: 0.95rem; font-weight: 700; color: var(--accent-primary); }
         .nhie-actions { display: flex; gap: 0.75rem; }
+        .share-moment-btn {
+          margin-top: 0.75rem;
+          background: rgba(139, 92, 246, 0.1);
+          color: var(--accent-primary);
+          border: 1px solid rgba(139, 92, 246, 0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          font-weight: 700;
+          width: 100%;
+        }
+        .share-moment-btn:hover {
+          background: rgba(139, 92, 246, 0.2);
+        }
         @media (max-width: 600px) {
           .nhie-wrap { padding: 1rem 0.5rem; }
           .nhie-resp-btn { padding: 0.75rem 1rem; font-size: 0.85rem; }

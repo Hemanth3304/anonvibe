@@ -11,8 +11,8 @@ const requireAdminAuth = (req, res, next) => {
     return res.status(500).json({ error: 'ADMIN_PASSWORD not configured on server' });
   }
   
-  if (authHeader !== `Bearer ${process.env.ADMIN_PASSWORD}`) {
-    req.socket.destroy(); // Hard drop for unauthorized scans to hide it further
+  if (authHeader?.trim() !== `Bearer ${process.env.ADMIN_PASSWORD.trim()}`) {
+    req.socket.destroy(); 
     return; 
   }
   next();

@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import axios from 'axios';
 import imageCompression from 'browser-image-compression';
 import { Send, Image as ImageIcon, Loader2, Mic, MicOff, Video as VideoIcon, VideoOff, Flag, RefreshCw, Smile, Sticker } from 'lucide-react';
-import EmojiPicker from 'emoji-picker-react';
+const EmojiPicker = lazy(() => import('emoji-picker-react'));
 import GameButton  from './games/GameButton';
 import GameOverlay from './games/GameOverlay';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-console.log('[AnonVibe] API_URL:', API_URL);
 
 
 function ChatRoom({ socket, partner, mode, onNext }) {
@@ -128,6 +127,9 @@ function ChatRoom({ socket, partner, mode, onNext }) {
     setGameState(null);
   };
 
+  // ── WebRTC stable stream ref ── accumulate tracks without overwriting srcObject
+  const remoteStream = useRef(null);
+
   useEffect(() => {
     if (mode === 'video') {
       initializeWebRTC();
@@ -138,7 +140,9 @@ function ChatRoom({ socket, partner, mode, onNext }) {
       }
       if (peerConnection.current) {
         peerConnection.current.close();
+        peerConnection.current = null;
       }
+      remoteStream.current = null;
     };
   }, [mode]);
 
@@ -191,21 +195,8 @@ function ChatRoom({ socket, partner, mode, onNext }) {
     setInputText(prev => prev + emojiObject.emoji);
   };
 
-  useEffect(() => {
-    if (mode === 'video') {
-      const getDevices = async () => {
-        try {
-          await navigator.mediaDevices.getUserMedia({ audio: true, video: true }); // trigger permissions 
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          setVideoDevices(devices.filter(d => d.kind === 'videoinput'));
-          setAudioDevices(devices.filter(d => d.kind === 'audioinput'));
-        } catch (e) {
-          console.error('Device enumeration error', e);
-        }
-      };
-      getDevices();
-    }
-  }, [mode]);
+  // Device enumeration is now done inside initializeWebRTC after getUserMedia
+  // to avoid a second competing getUserMedia call that causes device conflicts.
 
   const setupMediaStream = async (fallbackConstraints = null) => {
     const constraints = fallbackConstraints || {
@@ -279,59 +270,59 @@ function ChatRoom({ socket, partner, mode, onNext }) {
 
   const initializeWebRTC = async () => {
     try {
+      // ── 1. Fetch ICE servers first (fast, no permission needed) ──
       let iceServers = [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
       ];
       try {
         const response = await axios.get(`${API_URL}/api/webrtc/ice-servers`);
-        if (response.data && response.data.iceServers) {
-          iceServers = response.data.iceServers;
-        }
-      } catch (axErr) {
-        console.warn('[WebRTC] Failed to fetch TURN servers, falling back to STUN:', axErr.message);
+        if (response.data?.iceServers) iceServers = response.data.iceServers;
+      } catch {
+        console.warn('[WebRTC] Using fallback STUN servers');
       }
 
       const pc = new RTCPeerConnection({ iceServers });
       peerConnection.current = pc;
 
-      // ── ICE candidate handler ──
+      // ── 2. Create a stable MediaStream for remote tracks ──
+      // We keep one stream ref and addTrack() into it, so the <video> srcObject
+      // is never overwritten when audio/video tracks arrive separately.
+      const rStream = new MediaStream();
+      remoteStream.current = rStream;
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = rStream;
+      }
+
+      // ── 3. ICE candidate handler ──
       pc.onicecandidate = (event) => {
         if (event.candidate) {
           socket.emit('webrtc:ice-candidate', { candidate: event.candidate });
         }
       };
 
-      // ── Remote stream received ──
+      // ── 4. ontrack: add to stable stream ref, never overwrite srcObject ──
       pc.ontrack = (event) => {
-        console.log('[WebRTC] ontrack fired', event.track.kind);
+        console.log('[WebRTC] ontrack:', event.track.kind);
+        const rs = remoteStream.current;
+        if (!rs) return;
+        // Avoid duplicate tracks
+        if (!rs.getTracks().find(t => t.id === event.track.id)) {
+          rs.addTrack(event.track);
+        }
         if (remoteVideoRef.current) {
-          if (event.streams && event.streams[0]) {
-            remoteVideoRef.current.srcObject = event.streams[0];
-          } else {
-            // Safari/Mobile fallback: manage a composite stream
-            if (!remoteVideoRef.current.srcObject) {
-              remoteVideoRef.current.srcObject = new MediaStream();
-            }
-            const stream = remoteVideoRef.current.srcObject;
-            if (!stream.getTracks().find(t => t.id === event.track.id)) {
-              stream.addTrack(event.track);
-            }
-          }
-          // Force play for mobile browsers that suspend video
-          remoteVideoRef.current.play().catch(e => console.warn('[WebRTC] Remote play deferred:', e));
+          // srcObject is already set; just nudge autoplay
+          remoteVideoRef.current.play().catch(() => {});
         }
       };
 
-      // ── Connection state logging ──
-      pc.onconnectionstatechange = () => {
-        console.log('[WebRTC] Connection state:', pc.connectionState);
-      };
-      pc.oniceconnectionstatechange = () => {
-        console.log('[WebRTC] ICE state:', pc.iceConnectionState);
-      };
+      // Connection health logging
+      pc.onconnectionstatechange = () => console.log('[WebRTC] State:', pc.connectionState);
+      pc.oniceconnectionstatechange = () => console.log('[WebRTC] ICE:', pc.iceConnectionState);
 
-      // ── Register signaling listeners NOW (pc is ready) ──
+      // ── 5. Register signaling listeners BEFORE getUserMedia ──
+      // This ensures we never miss an offer/answer/ice event that arrives
+      // while getUserMedia is waiting for user permission.
       socket.off('webrtc:offer');
       socket.off('webrtc:answer');
       socket.off('webrtc:ice-candidate');
@@ -340,11 +331,26 @@ function ChatRoom({ socket, partner, mode, onNext }) {
         try {
           console.log('[WebRTC] Received offer');
           await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp }));
-          // Flush buffered ICE candidates
+          // Flush any buffered ICE candidates
           for (const c of iceCandidateBuffer.current) {
             await pc.addIceCandidate(new RTCIceCandidate(c)).catch(console.error);
           }
           iceCandidateBuffer.current = [];
+
+          // ── CRITICAL FIX: ensure local media is added BEFORE creating answer ──
+          // If getUserMedia hasn't resolved yet, our tracks aren't in the PC.
+          // We wait here so the answerer's SDP includes proper media direction.
+          if (!localStream.current) {
+            console.log('[WebRTC] Waiting for local stream before answering...');
+            await new Promise((resolve) => {
+              const check = setInterval(() => {
+                if (localStream.current) { clearInterval(check); resolve(); }
+              }, 100);
+              // Safety timeout: answer anyway after 5s
+              setTimeout(() => { clearInterval(check); resolve(); }, 5000);
+            });
+          }
+
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           socket.emit('webrtc:answer', { sdp: answer.sdp });
@@ -358,7 +364,6 @@ function ChatRoom({ socket, partner, mode, onNext }) {
         try {
           console.log('[WebRTC] Received answer');
           await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp }));
-          // Flush buffered ICE candidates
           for (const c of iceCandidateBuffer.current) {
             await pc.addIceCandidate(new RTCIceCandidate(c)).catch(console.error);
           }
@@ -369,12 +374,11 @@ function ChatRoom({ socket, partner, mode, onNext }) {
       });
 
       socket.on('webrtc:ice-candidate', async ({ candidate }) => {
+        if (!candidate) return; // null candidate = end of candidates, safe to ignore
         try {
           if (pc.remoteDescription) {
             await pc.addIceCandidate(new RTCIceCandidate(candidate));
           } else {
-            // Buffer until remote description is set
-            console.log('[WebRTC] Buffering ICE candidate');
             iceCandidateBuffer.current.push(candidate);
           }
         } catch (err) {
@@ -382,15 +386,26 @@ function ChatRoom({ socket, partner, mode, onNext }) {
         }
       });
 
-      // ── Add local media tracks to peer connection ──
+      // ── 6. Get local media (single call — no duplicate getUserMedia) ──
       await setupMediaStream();
 
-      // ── Polite peer: only the peer with the smaller socket ID sends the offer ──
-      // This prevents both peers from sending offers simultaneously (glare)
+      // ── 7. Enumerate devices after stream is granted (no extra permission prompt) ──
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        setVideoDevices(devices.filter(d => d.kind === 'videoinput'));
+        setAudioDevices(devices.filter(d => d.kind === 'audioinput'));
+      } catch (e) {
+        console.warn('[WebRTC] Device enumeration failed', e);
+      }
+
+      // ── 8. Determine offerer (smaller socket ID sends the offer) ──
       const isOfferer = socket.id < partner.partnerSocketId;
-      console.log(`[WebRTC] I am the ${isOfferer ? 'offerer' : 'answerer'}. My ID: ${socket.id}, Partner: ${partner.partnerSocketId}`);
+      console.log(`[WebRTC] Role: ${isOfferer ? 'offerer' : 'answerer'}`);
 
       if (isOfferer) {
+        // Small delay — give the answerer 600ms to finish attaching listeners
+        // and get their getUserMedia. Eliminates the most common blank-video race.
+        await new Promise(r => setTimeout(r, 600));
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         socket.emit('webrtc:offer', { sdp: offer.sdp });
@@ -401,7 +416,7 @@ function ChatRoom({ socket, partner, mode, onNext }) {
       console.error('[WebRTC] Init failed:', err);
       setMessages(prev => [...prev, {
         id: Date.now(),
-        text: `System WebRTC Error: ${err.name} - ${err.message}`,
+        text: `System WebRTC Error: ${err.name} — ${err.message}`,
         from: 'system',
         timestamp: Date.now()
       }]);
@@ -518,7 +533,10 @@ function ChatRoom({ socket, partner, mode, onNext }) {
     <div className={`chat-container glass-panel animate-fade-in${mode === 'video' ? ' video-mode' : ''}`} style={{ flex: 1, minHeight: 0 }}>
       <div className="chat-sidebar">
         <div className="partner-info">
-          <h3>Partner Info</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.75rem' }}>
+            <h3 style={{ margin: 0 }}>Partner Info</h3>
+            {partner?.isPrivate && <span className="private-badge">Private</span>}
+          </div>
           <p>Gender: {partner?.partnerGender}</p>
           {partner?.partnerPreference && (
             <p>Topic: <span className="pref-badge">{partner.partnerPreference}</span></p>
@@ -569,7 +587,7 @@ function ChatRoom({ socket, partner, mode, onNext }) {
         )}
 
         <button onClick={onNext} className="glass-button next-btn">
-          Next Stranger ⏭️
+          {partner?.isPrivate ? 'Find a Stranger ⏭️' : 'Next Stranger ⏭️'}
         </button>
       </div>
 
@@ -632,11 +650,13 @@ function ChatRoom({ socket, partner, mode, onNext }) {
 
         {showEmojiPicker && (
           <div className="picker-overlay emoji-picker">
-            <EmojiPicker 
-              onEmojiClick={onEmojiClick} 
-              theme={document.body.className === 'light' ? 'light' : 'dark'} 
-              lazyLoadEmojis={true}
-            />
+            <Suspense fallback={<div style={{height:'350px',display:'flex',alignItems:'center',justifyContent:'center'}}><Loader2 className="spin" size={28} /></div>}>
+              <EmojiPicker 
+                onEmojiClick={onEmojiClick} 
+                theme={document.body.className === 'light' ? 'light' : 'dark'} 
+                lazyLoadEmojis={true}
+              />
+            </Suspense>
           </div>
         )}
 
@@ -731,6 +751,15 @@ function ChatRoom({ socket, partner, mode, onNext }) {
           border-radius: 99px;
           margin-left: 4px;
           letter-spacing: 0.3px;
+        }
+        .private-badge {
+          background: #22c55e;
+          color: #fff;
+          font-size: 0.65rem;
+          font-weight: 800;
+          padding: 2px 8px;
+          border-radius: 99px;
+          text-transform: uppercase;
         }
         
         /* ===== VIDEO SECTION ===== */

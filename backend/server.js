@@ -48,6 +48,8 @@ try {
     exists: async () => 0,
     rPush: async () => 1,
     lTrim: async () => 1,
+    lLen: async () => 0,
+    lRange: async () => [],
     get: async () => null,
   };
 }

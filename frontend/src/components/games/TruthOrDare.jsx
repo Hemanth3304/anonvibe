@@ -1,6 +1,7 @@
 // TruthOrDare.jsx — User-generated Truth or Dare, turn-based
 import React, { useState, useEffect, useRef } from 'react';
 import EmojiPicker from 'emoji-picker-react';
+import { Share2 } from 'lucide-react';
 
 // phase: 'start'|'choose'|'asking'|'responding'|'done'
 export default function TruthOrDare({ socket, firstTurn, onEnd }) {
@@ -81,6 +82,20 @@ export default function TruthOrDare({ socket, firstTurn, onEnd }) {
   const executeNext = () => {
     socket.emit('game:message', { type: 'tod:next' });
     handleNextRound();
+  };
+
+  const handleShare = async () => {
+    const text = `🎭 Truth or Dare on AnonVibe!\n\n${choice === 'truth' ? '🤍 Truth' : '🔥 Dare'}: "${receivedQuestion}"\n✅ Answer: "${receivedAnswer}"\n\nJoin me on AnonVibe!`;
+    const url = window.location.origin;
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'AnonVibe Moment', text, url });
+      } else {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        alert('Copied to clipboard! Share it with your friends 🚀');
+      }
+    } catch (err) { console.error('Share failed:', err); }
   };
 
   return (
@@ -211,7 +226,10 @@ export default function TruthOrDare({ socket, firstTurn, onEnd }) {
             {myTurn && <button className="game-btn primary" onClick={executeNext}>Next Round →</button>}
             {!myTurn && <p className="tod-prompt" style={{width: '100%'}}>Waiting for stranger to start next round...</p>}
           </div>
-          <button className="game-btn danger" style={{marginTop: '1rem'}} onClick={() => onEnd('Game ended')}>End Game</button>
+          <button className="game-btn share-moment-btn" onClick={handleShare}>
+            <Share2 size={16} /> Share this Moment
+          </button>
+          <button className="game-btn danger" style={{marginTop: '0.5rem'}} onClick={() => onEnd('Game ended')}>End Game</button>
         </div>
       )}
 
@@ -272,6 +290,20 @@ export default function TruthOrDare({ socket, firstTurn, onEnd }) {
           text-align: left;
         }
         .game-btn.success { background: #22c55e; color: #fff; }
+        .share-moment-btn {
+          margin-top: 1rem;
+          background: rgba(139, 92, 246, 0.1);
+          color: var(--accent-primary);
+          border: 1px solid rgba(139, 92, 246, 0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          font-weight: 700;
+        }
+        .share-moment-btn:hover {
+          background: rgba(139, 92, 246, 0.2);
+        }
         @media (max-width: 600px) {
           .tod-wrap { padding: 1rem 0.5rem; }
           .tod-choice { padding: 0.75rem 1rem; font-size: 0.95rem; }

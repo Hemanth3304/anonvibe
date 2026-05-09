@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { MessageSquareText, Video, Sparkles, Globe2, Tag, Shield, Users, Zap } from 'lucide-react';
 
-function Entrance({ onRegister, onlineCount = 0 }) {
+function Entrance({ onRegister, onlineCount = 0, inviteRoomId, onJoinPrivate }) {
   const [gender, setGender] = useState('unknown');
   const [preference, setPreference] = useState('');
   const [mode, setMode] = useState('text');
@@ -12,20 +11,33 @@ function Entrance({ onRegister, onlineCount = 0 }) {
     onRegister({ gender, preference: preference.trim().toLowerCase(), mode });
   };
 
+  const [copied, setCopied] = useState(false);
+
+  const handleInvite = () => {
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const inviteLink = `${window.location.origin}?invite=${randomId}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'Join me on AnonVibe!',
+        text: 'Let\'s chat and play games anonymously!',
+        url: inviteLink
+      }).then(() => onJoinPrivate(randomId));
+    } else {
+      navigator.clipboard.writeText(inviteLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+      onJoinPrivate(randomId);
+    }
+  };
+
   return (
-    <motion.div
-      className="entrance-container glass-panel"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
+    <div
+      className="entrance-container glass-panel entrance-anim-in"
     >
-      <motion.div
-        initial={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
+      <div className="globe-wrap">
         <Globe2 size={54} className="globe-icon pulse-animation" />
-      </motion.div>
+      </div>
 
       <div className="community-badge animate-fade-in">
         <Users size={14} />
@@ -34,6 +46,13 @@ function Entrance({ onRegister, onlineCount = 0 }) {
 
       <h1>Connect with the World</h1>
       <p className="subtitle">Instant, anonymous, and free stranger chat with games.</p>
+
+      {inviteRoomId && (
+        <div className="invite-alert animate-fade-in">
+          <Sparkles size={16} />
+          <span>You've been invited to a private chat!</span>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
 
@@ -94,15 +113,23 @@ function Entrance({ onRegister, onlineCount = 0 }) {
           </div>
         </div>
 
-        <motion.button
+        <button
           type="submit"
           className="glass-button start-btn"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
         >
           <Sparkles size={20} />
-          Start Chatting
-        </motion.button>
+          {inviteRoomId ? 'Accept Invite' : 'Start Chatting'}
+        </button>
+
+        {!inviteRoomId && (
+          <button
+            type="button"
+            className="invite-friend-btn"
+            onClick={handleInvite}
+          >
+            {copied ? 'Link Copied! Send it to a friend' : 'Play with a Friend ➔'}
+          </button>
+        )}
       </form>
 
       <div className="features-grid">
@@ -137,6 +164,21 @@ function Entrance({ onRegister, onlineCount = 0 }) {
           background: radial-gradient(circle at center, rgba(139,92,246,0.1) 0%, transparent 50%);
           z-index: -1;
           pointer-events: none;
+        }
+        /* ── Entrance animation (replaces framer-motion) ── */
+        @keyframes entranceIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .entrance-anim-in {
+          animation: entranceIn 0.6s ease-out both;
+        }
+        .globe-wrap {
+          animation: globeIn 0.5s ease-out 0.2s both;
+        }
+        @keyframes globeIn {
+          from { transform: scale(0.9); }
+          to   { transform: scale(1); }
         }
 
         /* ── Icon ── */
@@ -268,6 +310,37 @@ function Entrance({ onRegister, onlineCount = 0 }) {
           gap: 0.5rem;
           background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
         }
+        .invite-friend-btn {
+          width: 100%;
+          margin-top: 0.75rem;
+          background: transparent;
+          border: 1px solid rgba(139, 92, 246, 0.3);
+          color: var(--accent-primary);
+          padding: 0.75rem;
+          border-radius: 12px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 0.9rem;
+          transition: all 0.3s ease;
+        }
+        .invite-friend-btn:hover {
+          background: rgba(139, 92, 246, 0.05);
+          border-color: var(--accent-primary);
+        }
+        .invite-alert {
+          background: rgba(34, 197, 94, 0.1);
+          color: #22c55e;
+          padding: 10px;
+          border-radius: 12px;
+          margin-bottom: 1.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          border: 1px solid rgba(34, 197, 94, 0.2);
+        }
 
         /* ── Tablet ── */
         @media (max-width: 900px) {
@@ -327,7 +400,7 @@ function Entrance({ onRegister, onlineCount = 0 }) {
           .globe-icon { width: 36px; height: 36px; }
         }
       `}</style>
-    </motion.div>
+    </div>
   );
 }
 

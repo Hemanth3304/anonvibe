@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { io } from 'socket.io-client';
 import { Share2 } from 'lucide-react';
 import Entrance from './components/Entrance';
-import ChatRoom from './components/ChatRoom';
-import AdminDashboard from './components/AdminDashboard';
+const ChatRoom      = lazy(() => import('./components/ChatRoom'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 import './index.css';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -14,6 +14,8 @@ function App() {
   const [profile, setProfile] = useState(null);
   const [partner, setPartner] = useState(null);
   const [onlineCount, setOnlineCount] = useState(0);
+  const [inviteRoomId, setInviteRoomId] = useState(null);
+  const [isWaitingPrivate, setIsWaitingPrivate] = useState(false);
 
   useEffect(() => {
     const newSocket = io(SOCKET_URL, {
@@ -47,6 +49,12 @@ function App() {
       setView('entrance');
     });
 
+    newSocket.on('room:waiting_private', ({ roomId }) => {
+      setInviteRoomId(roomId);
+      setIsWaitingPrivate(true);
+      setView('matching');
+    });
+
     const handleKeyDown = (e) => {
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'l') {
         setView('admin');
@@ -54,9 +62,22 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
 
+    // ── Keep backend warm (prevents Render free-tier cold start delay) ──
+    const ping = () => fetch(`${SOCKET_URL}/api/health`, { method: 'GET', keepalive: true }).catch(() => {});
+    ping(); // immediate ping on load
+    const keepAlive = setInterval(ping, 14 * 60 * 1000); // every 14 min
+
+    // Check for invite code in URL
+    const params = new URLSearchParams(window.location.search);
+    const invite = params.get('invite');
+    if (invite) {
+      setInviteRoomId(invite);
+    }
+
     return () => {
       newSocket.close();
       window.removeEventListener('keydown', handleKeyDown);
+      clearInterval(keepAlive);
     };
   }, []);
 
@@ -64,6 +85,10 @@ function App() {
     setProfile(data);
     socket.connect();
     socket.emit('guest:register', data);
+    
+    if (inviteRoomId) {
+      socket.emit('room:join_private', { roomId: inviteRoomId });
+    }
   };
 
   const handleNext = () => {
@@ -126,19 +151,30 @@ function App() {
           </div>
         </header>
 
-
-        <main>
+        <Suspense fallback={<div className="loading-view" style={{display:'flex',alignItems:'center',justifyContent:'center',flex:1}}><div className="loader" /></div>}>
+          <main>
           {view === 'entrance' && (
-            <Entrance onRegister={handleRegister} onlineCount={onlineCount} />
+            <Entrance 
+              onRegister={handleRegister} 
+              onlineCount={onlineCount} 
+              inviteRoomId={inviteRoomId}
+              onJoinPrivate={(id) => {
+                setInviteRoomId(id);
+                handleRegister(profile || { gender: 'unknown', mode: 'text' });
+              }}
+            />
           )}
 
           {view === 'matching' && (
             <div className="loading-view glass-panel animate-fade-in">
               <div className="loader"></div>
               <h2>Searching for a stranger…</h2>
-              {profile?.preference
-                ? <p>Looking for someone interested in <strong style={{ color: 'var(--accent-primary)' }}>"{profile.preference}"</strong></p>
-                : <p>Finding your perfect anonymous match.</p>
+              {isWaitingPrivate 
+                ? <p>Waiting for your friend to join room <strong style={{ color: 'var(--accent-primary)' }}>{inviteRoomId}</strong></p>
+                : (profile?.preference
+                  ? <p>Looking for someone interested in <strong style={{ color: 'var(--accent-primary)' }}>"{profile.preference}"</strong></p>
+                  : <p>Finding your perfect anonymous match.</p>
+                )
               }
               <button
                 className="glass-button"
@@ -163,6 +199,7 @@ function App() {
             <AdminDashboard onExit={() => setView('entrance')} />
           )}
         </main>
+        </Suspense>
 
       <style>{`
         .dot {
