@@ -61,7 +61,7 @@ const io = new Server(httpServer, {
     methods: ['GET', 'POST'],
   },
   transports: ['websocket', 'polling'],
-  maxHttpBufferSize: 10 * 1024 * 1024, // 10MB for file transfers
+  maxHttpBufferSize: 25 * 1024 * 1024, // 25MB for file transfers
   pingTimeout: 30000,
   pingInterval: 10000,
 });
@@ -69,8 +69,8 @@ const io = new Server(httpServer, {
 // ─── MIDDLEWARE ───────────────────────────────────────────────────
 app.use(helmet({ crossOriginEmbedderPolicy: false }));
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 // Rate limiting
 const limiter = rateLimit({

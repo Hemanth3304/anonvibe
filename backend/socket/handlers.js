@@ -96,18 +96,20 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
     });
 
     // ── 3. TEXT CHAT ──────────────────────────────────────────────
-    socket.on('chat:message', async ({ text }) => {
+    socket.on('chat:message', async ({ text, fileUrl, fileType }) => {
       const profile = guests.get(socket.id);
       if (!profile?.roomId) return;
 
       // Basic content filter
       const filtered = filterText(text);
-      if (!filtered) return;
+      if (!filtered && !fileUrl) return; // Allow empty text if there's a file
 
       const msg = {
         id:        uuidv4(),
         from:      socket.id,
-        text:      filtered,
+        text:      filtered || '',
+        fileUrl:   fileUrl || null,
+        fileType:  fileType || null,
         timestamp: Date.now(),
       };
 
