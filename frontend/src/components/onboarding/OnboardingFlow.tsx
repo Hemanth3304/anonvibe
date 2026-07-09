@@ -6,6 +6,7 @@ import {
   Users, Heart, Briefcase, Gamepad2, BookOpen, Music,
   Code, Camera, Trophy, Film, Globe, MapPin, ChevronRight, Check
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 interface OnboardingFlowProps {
   userId: string;
@@ -40,7 +41,6 @@ const LANGUAGES = [
 
 const STEPS = ["Purpose", "Interests", "Languages", "Location", "Profile"];
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
 export default function OnboardingFlow({ userId, onComplete }: OnboardingFlowProps) {
   const [step, setStep] = useState(1);
@@ -76,14 +76,14 @@ export default function OnboardingFlow({ userId, onComplete }: OnboardingFlowPro
   }
 
   async function saveStep(stepNum: number, data: object) {
+    // Skip DB write for demo users or if Supabase not configured
+    if (userId.startsWith("demo-") || !process.env.NEXT_PUBLIC_SUPABASE_URL) return;
     try {
-      await fetch(`${BACKEND_URL}/api/users/onboarding`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, onboardingStep: stepNum, ...data }),
-      });
+      await supabase
+        .from("profiles")
+        .upsert({ id: userId, onboarding_step: stepNum, ...data }, { onConflict: "id" });
     } catch {
-      // Non-blocking — continue even if backend is offline
+      // Non-blocking
     }
   }
 
