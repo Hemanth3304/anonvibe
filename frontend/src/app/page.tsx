@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import AuthModal from "@/components/modals/AuthModal";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
+import AgeGate from "@/components/modals/AgeGate";
 
 const FEATURES = [
   {
@@ -356,6 +357,7 @@ export default function Home() {
       {showOnboarding && userId && (
         <OnboardingFlow userId={userId} onComplete={handleOnboardingComplete} />
       )}
+      <AgeGate />
     </div>
   );
 }
