@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, type Variants } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import {
   MessageCircle, Heart, MapPin, Users, Radio, Calendar,
   Sparkles, Shield, Zap, ArrowRight, Star, Lock, ChevronRight,
@@ -17,18 +17,11 @@ const FEATURES = [
     title: "Anonymous Chat",
     tagline: "Talk freely. No judgment.",
     color: "#22d3ee",
-    gradient: "from-cyan-500/20 to-cyan-600/5",
-    border: "rgba(34,211,238,0.2)",
-    glow: "rgba(34,211,238,0.1)",
+    border: "rgba(34,211,238,0.25)",
+    glow: "rgba(34,211,238,0.12)",
     requiresAuth: false,
     badge: "Free",
-    badgeColor: "#22d3ee",
-    features: [
-      "Send & receive anonymous messages",
-      "Anonymous polls & confessions",
-      "Compliments & reactions",
-      "No login for limited usage",
-    ],
+    features: ["Send & receive anonymous messages", "Anonymous polls & confessions", "Compliments & reactions", "No login for limited usage"],
   },
   {
     id: "dating",
@@ -36,18 +29,11 @@ const FEATURES = [
     title: "Dating",
     tagline: "Find your match.",
     color: "#f472b6",
-    gradient: "from-pink-500/20 to-pink-600/5",
-    border: "rgba(244,114,182,0.2)",
-    glow: "rgba(244,114,182,0.1)",
+    border: "rgba(244,114,182,0.25)",
+    glow: "rgba(244,114,182,0.12)",
     requiresAuth: true,
     badge: "AI-Powered",
-    badgeColor: "#f472b6",
-    features: [
-      "AI-powered compatibility scores",
-      "Swipe, like & match",
-      "AI ice breakers",
-      "Verified profiles with safety tools",
-    ],
+    features: ["AI-powered compatibility scores", "Swipe, like & match", "AI ice breakers", "Verified profiles with safety tools"],
   },
   {
     id: "nearby",
@@ -55,18 +41,11 @@ const FEATURES = [
     title: "Nearby People",
     tagline: "Discover who's around.",
     color: "#fb923c",
-    gradient: "from-orange-500/20 to-orange-600/5",
-    border: "rgba(251,146,60,0.2)",
-    glow: "rgba(251,146,60,0.1)",
+    border: "rgba(251,146,60,0.25)",
+    glow: "rgba(251,146,60,0.12)",
     requiresAuth: true,
     badge: "Privacy-First",
-    badgeColor: "#fb923c",
-    features: [
-      "Geohash-based proximity (±11km)",
-      "Never reveals exact GPS",
-      "Filter by age, interests & language",
-      "\"2 km away\" — never coordinates",
-    ],
+    features: ["Geohash-based proximity (±11km)", "Never reveals exact GPS", "Filter by age, interests & language", "\"2 km away\" — never coordinates"],
   },
   {
     id: "communities",
@@ -74,18 +53,11 @@ const FEATURES = [
     title: "Communities",
     tagline: "Find your tribe.",
     color: "#a855f7",
-    gradient: "from-purple-500/20 to-purple-600/5",
-    border: "rgba(168,85,247,0.2)",
-    glow: "rgba(168,85,247,0.1)",
+    border: "rgba(168,85,247,0.25)",
+    glow: "rgba(168,85,247,0.12)",
     requiresAuth: true,
     badge: "Explore",
-    badgeColor: "#a855f7",
-    features: [
-      "Technology, Gaming, Music & more",
-      "Posts, polls, media & comments",
-      "Create your own community",
-      "Moderators & pinned content",
-    ],
+    features: ["Technology, Gaming, Music & more", "Posts, polls, media & comments", "Create your own community", "Moderators & pinned content"],
   },
   {
     id: "living-rooms",
@@ -93,18 +65,11 @@ const FEATURES = [
     title: "Living Rooms",
     tagline: "Go live. Connect now.",
     color: "#34d399",
-    gradient: "from-emerald-500/20 to-emerald-600/5",
-    border: "rgba(52,211,153,0.2)",
-    glow: "rgba(52,211,153,0.1)",
+    border: "rgba(52,211,153,0.25)",
+    glow: "rgba(52,211,153,0.12)",
     requiresAuth: true,
     badge: "Live",
-    badgeColor: "#34d399",
-    features: [
-      "Voice, video & text rooms",
-      "Raise hand, mute & moderate",
-      "Screen sharing",
-      "Public, private or password rooms",
-    ],
+    features: ["Voice, video & text rooms", "Raise hand, mute & moderate", "Screen sharing", "Public, private or password rooms"],
   },
   {
     id: "events",
@@ -112,18 +77,11 @@ const FEATURES = [
     title: "Events",
     tagline: "Experience things together.",
     color: "#818cf8",
-    gradient: "from-violet-500/20 to-violet-600/5",
-    border: "rgba(129,140,248,0.2)",
-    glow: "rgba(129,140,248,0.1)",
+    border: "rgba(129,140,248,0.25)",
+    glow: "rgba(129,140,248,0.12)",
     requiresAuth: true,
     badge: "Nearby",
-    badgeColor: "#818cf8",
-    features: [
-      "Discover local events on maps",
-      "RSVP & QR check-in",
-      "Host your own events",
-      "Event analytics dashboard",
-    ],
+    features: ["Discover local events on maps", "RSVP & QR check-in", "Host your own events", "Event analytics dashboard"],
   },
 ];
 
@@ -134,12 +92,14 @@ const STATS = [
   { value: "99.9%", label: "Uptime" },
 ];
 
-const TRUST_ITEMS = [
-  { icon: Shield, label: "End-to-End Privacy" },
-  { icon: Zap, label: "AI Moderation" },
-  { icon: Globe, label: "150+ Countries" },
-  { icon: Star, label: "4.9★ Rating" },
-];
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.5, ease: "easeOut" as const },
+  }),
+};
 
 export default function Home() {
   const [authOpen, setAuthOpen] = useState(false);
@@ -161,124 +121,113 @@ export default function Home() {
 
   function handleOnboardingComplete() {
     setShowOnboarding(false);
-    // In a real app: redirect to /home
     alert("Welcome to AnonVibe! 🎉 (Home page coming soon)");
   }
 
-  const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: { delay: i * 0.08, duration: 0.5, ease: "easeOut" as const },
-    }),
-  };
-
   return (
-    <div className="bg-mesh min-h-screen">
+    <div style={{ background: "#030712", minHeight: "100vh", overflowX: "hidden", color: "#f8fafc" }}>
+      {/* Gradient mesh background */}
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
+        background: "radial-gradient(ellipse 80% 50% at 20% -10%, rgba(139,92,246,0.15) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 10%, rgba(244,114,182,0.08) 0%, transparent 60%)"
+      }} />
+
       {/* ── Navbar ── */}
-      <nav className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(3,7,18,0.8)", backdropFilter: "blur(20px)" }}>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-violet-600 flex items-center justify-center">
-            <Sparkles size={16} className="text-white" />
+      <nav style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 32px", height: 64,
+        background: "rgba(3,7,18,0.85)", backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)"
+      }}>
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#9333ea,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Sparkles size={15} color="white" />
           </div>
-          <span className="font-bold text-lg">AnonVibe</span>
+          <span style={{ fontWeight: 800, fontSize: 17, letterSpacing: "-0.3px" }}>AnonVibe</span>
         </div>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-6 text-sm" style={{ color: "#94a3b8" }}>
-          {["Features", "Communities", "Events", "Safety"].map((item) => (
-            <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-white transition-colors">{item}</a>
+        {/* Desktop links */}
+        <div style={{ display: "flex", alignItems: "center", gap: 28 }} className="hide-mobile">
+          {["Features", "Communities", "Events", "Safety"].map(item => (
+            <a key={item} href={`#${item.toLowerCase()}`} style={{ color: "#94a3b8", fontSize: 14, textDecoration: "none", transition: "color 0.2s" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#f8fafc")}
+              onMouseLeave={e => (e.currentTarget.style.color = "#94a3b8")}>
+              {item}
+            </a>
           ))}
         </div>
 
-        <div className="hidden md:flex items-center gap-3">
-          <button className="btn-ghost text-sm px-4 py-2" onClick={() => openAuth("signin")}>Sign In</button>
-          <button className="btn-primary text-sm px-5 py-2.5" onClick={() => openAuth("signup")}>Get Started</button>
+        {/* Desktop auth */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }} className="hide-mobile">
+          <button onClick={() => openAuth("signin")} style={{ padding: "8px 18px", borderRadius: 10, background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Sign In</button>
+          <button onClick={() => openAuth("signup")} style={{ padding: "8px 18px", borderRadius: 10, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 16px rgba(147,51,234,0.35)" }}>Get Started</button>
         </div>
 
-        {/* Mobile menu */}
-        <button className="md:hidden text-slate-400" onClick={() => setNavOpen(!navOpen)}>
+        {/* Mobile menu toggle */}
+        <button className="show-mobile" onClick={() => setNavOpen(!navOpen)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: 4 }}>
           {navOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </nav>
 
-      {/* Mobile Nav Panel */}
-      {navOpen && (
-        <motion.div
-          className="fixed top-16 left-0 right-0 z-30 p-4 space-y-3 md:hidden"
-          style={{ background: "rgba(10,15,30,0.98)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <button className="btn-secondary w-full" onClick={() => { openAuth("signin"); setNavOpen(false); }}>Sign In</button>
-          <button className="btn-primary w-full" onClick={() => { openAuth("signup"); setNavOpen(false); }}>Create Account</button>
-        </motion.div>
-      )}
+      {/* Mobile nav */}
+      <AnimatePresence>
+        {navOpen && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            style={{ position: "fixed", top: 64, left: 0, right: 0, zIndex: 40, padding: 16, display: "flex", flexDirection: "column", gap: 10, background: "rgba(10,15,30,0.98)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+            <button onClick={() => { openAuth("signin"); setNavOpen(false); }} style={{ padding: "12px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Sign In</button>
+            <button onClick={() => { openAuth("signup"); setNavOpen(false); }} style={{ padding: "12px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Create Account</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Hero ── */}
-      <section className="relative pt-44 pb-20 px-6 text-center overflow-hidden">
-        {/* Background glows */}
-        <div className="glow-dot w-96 h-96 top-10 left-1/2 -translate-x-1/2" style={{ background: "rgba(147,51,234,0.12)" }} />
+      <section style={{ position: "relative", zIndex: 1, paddingTop: 120, paddingBottom: 80, textAlign: "center", paddingLeft: 24, paddingRight: 24 }}>
+        {/* Glow */}
+        <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "rgba(147,51,234,0.1)", borderRadius: "50%", filter: "blur(80px)", pointerEvents: "none" }} />
 
-        <motion.div initial={{ y: 15 }} animate={{ y: 0 }} transition={{ duration: 0.6 }} className="relative z-10">
-          {/* Trust badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 text-sm"
-            style={{ background: "rgba(147,51,234,0.1)", border: "1px solid rgba(147,51,234,0.25)", color: "#c084fc" }}>
-            <Sparkles size={14} />
+        <motion.div initial={{ y: 12 }} animate={{ y: 0 }} transition={{ duration: 0.5 }} style={{ position: "relative" }}>
+          {/* Badge */}
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 16px", borderRadius: 100, background: "rgba(147,51,234,0.1)", border: "1px solid rgba(147,51,234,0.25)", color: "#c084fc", fontSize: 13, fontWeight: 600, marginBottom: 28 }}>
+            <Sparkles size={13} />
             <span>The #1 Social Discovery Platform</span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-black leading-tight mb-6 tracking-tight">
-            Meet New People.
-            <br />
-            <span className="gradient-text">Join Communities.</span>
-            <br />
+          {/* Main headline */}
+          <h1 style={{ fontSize: "clamp(36px, 7vw, 72px)", fontWeight: 900, lineHeight: 1.1, letterSpacing: "-1px", marginBottom: 20, fontFamily: "inherit" }}>
+            Meet New People.<br />
+            <span style={{ background: "linear-gradient(135deg,#c084fc 0%,#818cf8 50%,#22d3ee 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              Join Communities.
+            </span><br />
             Chat Anonymously.
           </h1>
 
-          <p className="text-lg md:text-xl max-w-2xl mx-auto mb-4" style={{ color: "#94a3b8" }}>
+          <p style={{ fontSize: "clamp(15px, 2vw, 18px)", color: "#94a3b8", maxWidth: 560, margin: "0 auto 12px" }}>
             Anonymous Chat • Dating • Nearby People • Living Rooms • Communities • Events
           </p>
-
-          <p className="text-base max-w-xl mx-auto mb-10" style={{ color: "#64748b" }}>
+          <p style={{ fontSize: 14, color: "#64748b", maxWidth: 460, margin: "0 auto 36px" }}>
             AnonVibe is a modern social discovery platform where you can connect authentically — safely and privately.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              id="start-chat-btn"
-              className="btn-primary flex items-center justify-center gap-2 text-base px-8 py-4"
-              onClick={() => openAuth("signup")}
-            >
-              <MessageCircle size={18} />
-              Start Anonymous Chat
+          {/* CTAs */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginBottom: 40 }}>
+            <button id="start-chat-btn" onClick={() => openAuth("signup")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 24px rgba(147,51,234,0.4)" }}>
+              <MessageCircle size={17} />Start Anonymous Chat
             </button>
-            <button
-              id="signin-btn"
-              className="btn-secondary flex items-center justify-center gap-2 text-base px-8 py-4"
-              onClick={() => openAuth("signin")}
-            >
-              Sign In
-              <ArrowRight size={16} />
+            <button id="signin-btn" onClick={() => openAuth("signin")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
+              Sign In <ArrowRight size={15} />
             </button>
-            <button
-              id="create-account-btn"
-              className="btn-ghost flex items-center justify-center gap-2 text-base px-8 py-4"
-              onClick={() => openAuth("signup")}
-            >
+            <button id="create-account-btn" onClick={() => openAuth("signup")} style={{ padding: "14px 28px", borderRadius: 12, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "#94a3b8", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
               Create Account
             </button>
           </div>
 
-          {/* Trust Strip */}
-          <div className="flex flex-wrap justify-center gap-6 mt-12">
-            {TRUST_ITEMS.map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center gap-2 text-sm" style={{ color: "#64748b" }}>
-                <Icon size={15} style={{ color: "#a855f7" }} />
-                <span>{label}</span>
+          {/* Trust strip */}
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 24 }}>
+            {[{ icon: Shield, label: "End-to-End Privacy" }, { icon: Zap, label: "AI Moderation" }, { icon: Globe, label: "150+ Countries" }, { icon: Star, label: "4.9★ Rating" }].map(({ icon: Icon, label }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#64748b" }}>
+                <Icon size={14} color="#a855f7" />{label}
               </div>
             ))}
           </div>
@@ -286,109 +235,61 @@ export default function Home() {
       </section>
 
       {/* ── Stats ── */}
-      <section className="py-12 px-6">
-        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+      <section style={{ position: "relative", zIndex: 1, padding: "40px 24px" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }} className="stats-grid">
           {STATS.map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              className="glass-card p-6 text-center"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-            >
-              <div className="text-3xl font-black gradient-text mb-1">{stat.value}</div>
-              <div className="text-sm" style={{ color: "#64748b" }}>{stat.label}</div>
+            <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+              style={{ textAlign: "center", padding: "24px 16px", borderRadius: 16, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ fontSize: 28, fontWeight: 900, background: "linear-gradient(135deg,#c084fc,#22d3ee)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", marginBottom: 4 }}>{stat.value}</div>
+              <div style={{ fontSize: 13, color: "#64748b" }}>{stat.label}</div>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* ── Feature Cards ── */}
-      <section id="features" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            className="text-center mb-14"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl md:text-5xl font-black mb-4">
-              Everything you need to <span className="gradient-text">connect</span>
+      <section id="features" style={{ position: "relative", zIndex: 1, padding: "60px 24px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: "center", marginBottom: 48 }}>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 900, marginBottom: 12, letterSpacing: "-0.5px" }}>
+              Everything you need to <span style={{ background: "linear-gradient(135deg,#c084fc,#22d3ee)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>connect</span>
             </h2>
-            <p className="text-lg" style={{ color: "#64748b" }}>
-              Six powerful ways to discover and engage with people around the world.
-            </p>
+            <p style={{ fontSize: 16, color: "#64748b" }}>Six powerful ways to discover and engage with people around the world.</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
             {FEATURES.map((f, i) => (
-              <motion.div
-                key={f.id}
-                id={`feature-${f.id}`}
-                custom={i}
-                variants={cardVariants}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                className="p-7 cursor-pointer group relative overflow-hidden"
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: `1px solid ${f.border}`,
-                  borderRadius: 20,
-                  backdropFilter: "blur(16px)",
-                  WebkitBackdropFilter: "blur(16px)",
-                  transition: "all 0.3s ease",
-                }}
-                whileHover={{ y: -4, boxShadow: `0 20px 60px ${f.glow}` }}
+              <motion.div key={f.id} id={`feature-${f.id}`} custom={i} variants={cardVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}
                 onClick={() => f.requiresAuth && openAuth("signup")}
+                style={{ padding: 28, borderRadius: 20, background: "rgba(255,255,255,0.04)", border: `1px solid ${f.border}`, cursor: "pointer", position: "relative", overflow: "hidden", transition: "all 0.3s ease" }}
+                whileHover={{ y: -4, boxShadow: `0 20px 60px ${f.glow}, 0 0 0 1px ${f.border}` }}
               >
-                {/* Glow background */}
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                  style={{ background: `radial-gradient(ellipse 80% 60% at 30% 20%, ${f.glow} 0%, transparent 70%)` }}
-                />
-
-                <div className="relative z-10">
-                  {/* Icon + Badge */}
-                  <div className="flex items-start justify-between mb-5">
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center"
-                      style={{ background: `${f.color}18`, border: `1px solid ${f.color}40` }}
-                    >
-                      <f.icon size={22} style={{ color: f.color }} />
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {f.requiresAuth && <Lock size={12} style={{ color: "#475569" }} />}
-                      <span
-                        className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                        style={{ background: `${f.badgeColor}18`, color: f.badgeColor, border: `1px solid ${f.badgeColor}40` }}
-                      >
-                        {f.badge}
-                      </span>
-                    </div>
+                {/* Icon row */}
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", background: `${f.color}18`, border: `1px solid ${f.color}40` }}>
+                    <f.icon size={21} color={f.color} />
                   </div>
-
-                  <h3 className="text-xl font-bold mb-1">{f.title}</h3>
-                  <p className="text-sm mb-5" style={{ color: "#64748b" }}>{f.tagline}</p>
-
-                  <ul className="space-y-2.5">
-                    {f.features.map((feat) => (
-                      <li key={feat} className="flex items-start gap-2.5 text-sm" style={{ color: "#94a3b8" }}>
-                        <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: f.color }} />
-                        {feat}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button
-                    className="mt-6 flex items-center gap-1.5 text-sm font-semibold group-hover:gap-2.5 transition-all"
-                    style={{ color: f.color }}
-                  >
-                    {f.requiresAuth ? "Sign up to unlock" : "Start for free"}
-                    <ChevronRight size={15} />
-                  </button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    {f.requiresAuth && <Lock size={11} color="#475569" />}
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 100, background: `${f.color}18`, color: f.color, border: `1px solid ${f.color}40` }}>{f.badge}</span>
+                  </div>
                 </div>
+
+                <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 4, letterSpacing: "-0.2px" }}>{f.title}</h3>
+                <p style={{ fontSize: 13, color: "#64748b", marginBottom: 16 }}>{f.tagline}</p>
+
+                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {f.features.map(feat => (
+                    <li key={feat} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: "#94a3b8" }}>
+                      <div style={{ width: 6, height: 6, borderRadius: 3, background: f.color, marginTop: 5, flexShrink: 0 }} />
+                      {feat}
+                    </li>
+                  ))}
+                </ul>
+
+                <button style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 700, background: "none", border: "none", padding: 0, color: f.color, cursor: "pointer" }}>
+                  {f.requiresAuth ? "Sign up to unlock" : "Start for free"} <ChevronRight size={14} />
+                </button>
               </motion.div>
             ))}
           </div>
@@ -396,28 +297,20 @@ export default function Home() {
       </section>
 
       {/* ── CTA Banner ── */}
-      <section className="py-20 px-6">
-        <motion.div
-          className="max-w-4xl mx-auto text-center p-12 rounded-3xl relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg, rgba(147,51,234,0.15), rgba(124,58,237,0.1))", border: "1px solid rgba(147,51,234,0.2)" }}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <div className="glow-dot w-64 h-64 top-0 left-1/2 -translate-x-1/2" style={{ background: "rgba(147,51,234,0.15)" }} />
-          <div className="relative z-10">
-            <h2 className="text-4xl md:text-5xl font-black mb-4">
-              Ready to <span className="gradient-text">connect?</span>
+      <section style={{ position: "relative", zIndex: 1, padding: "60px 24px" }}>
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          style={{ maxWidth: 800, margin: "0 auto", textAlign: "center", padding: "56px 40px", borderRadius: 28, background: "linear-gradient(135deg,rgba(147,51,234,0.12),rgba(124,58,237,0.08))", border: "1px solid rgba(147,51,234,0.2)", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)", width: 300, height: 300, background: "rgba(147,51,234,0.12)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none" }} />
+          <div style={{ position: "relative" }}>
+            <h2 style={{ fontSize: "clamp(26px, 4vw, 44px)", fontWeight: 900, marginBottom: 12, letterSpacing: "-0.5px" }}>
+              Ready to <span style={{ background: "linear-gradient(135deg,#c084fc,#22d3ee)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>connect?</span>
             </h2>
-            <p className="text-lg mb-8" style={{ color: "#94a3b8" }}>
-              Join half a million people already discovering meaningful connections on AnonVibe.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="btn-primary text-base px-10 py-4 flex items-center gap-2 mx-auto sm:mx-0" onClick={() => openAuth("signup")}>
-                <Sparkles size={18} />
-                Create Free Account
+            <p style={{ fontSize: 16, color: "#94a3b8", marginBottom: 28 }}>Join half a million people already discovering meaningful connections on AnonVibe.</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
+              <button onClick={() => openAuth("signup")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+                <Sparkles size={16} />Create Free Account
               </button>
-              <button className="btn-secondary text-base px-10 py-4 mx-auto sm:mx-0" onClick={() => openAuth("signin")}>
+              <button onClick={() => openAuth("signin")} style={{ padding: "14px 28px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
                 Sign In
               </button>
             </div>
@@ -426,35 +319,40 @@ export default function Home() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="py-10 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-purple-600 to-violet-600 flex items-center justify-center">
-              <Sparkles size={12} className="text-white" />
+      <footer style={{ position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,0.06)", padding: "32px 24px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 24, height: 24, borderRadius: 6, background: "linear-gradient(135deg,#9333ea,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Sparkles size={12} color="white" />
             </div>
-            <span className="font-bold">AnonVibe</span>
+            <span style={{ fontWeight: 800, fontSize: 15 }}>AnonVibe</span>
           </div>
-          <p className="text-sm" style={{ color: "#334155" }}>
-            © 2026 AnonVibe. Anonymous. Secure. Social.
-          </p>
-          <div className="flex gap-6 text-sm" style={{ color: "#475569" }}>
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
-            <a href="#" className="hover:text-white transition-colors">Safety</a>
+          <p style={{ fontSize: 13, color: "#334155" }}>© 2026 AnonVibe. Anonymous. Secure. Social.</p>
+          <div style={{ display: "flex", gap: 24 }}>
+            {["Privacy", "Terms", "Safety"].map(link => (
+              <a key={link} href="#" style={{ fontSize: 13, color: "#475569", textDecoration: "none" }}>{link}</a>
+            ))}
           </div>
         </div>
       </footer>
 
+      {/* ── Responsive Styles ── */}
+      <style>{`
+        .hide-mobile { display: flex !important; }
+        .show-mobile { display: none !important; }
+        .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
+
+        @media (max-width: 768px) {
+          .hide-mobile { display: none !important; }
+          .show-mobile { display: block !important; }
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+      `}</style>
+
       {/* Modals */}
       {authOpen && (
-        <AuthModal
-          isOpen={authOpen}
-          onClose={() => setAuthOpen(false)}
-          onSuccess={handleAuthSuccess}
-          defaultTab={authTab}
-        />
+        <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} onSuccess={handleAuthSuccess} defaultTab={authTab} />
       )}
-
       {showOnboarding && userId && (
         <OnboardingFlow userId={userId} onComplete={handleOnboardingComplete} />
       )}
