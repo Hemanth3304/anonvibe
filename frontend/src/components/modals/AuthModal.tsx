@@ -18,7 +18,6 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = "si
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
   const [signInForm, setSignInForm] = useState({ email: "", password: "" });
   const [signUpForm, setSignUpForm] = useState({ email: "", username: "", password: "" });
 
@@ -45,7 +44,6 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = "si
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    // For demo, simulate sign-in locally
     setLoading(true);
     await new Promise((r) => setTimeout(r, 800));
     setLoading(false);
@@ -54,47 +52,85 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = "si
 
   if (!isOpen) return null;
 
+  const inputWrap: React.CSSProperties = {
+    position: "relative",
+    width: "100%",
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "13px 16px 13px 44px",
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: 10,
+    color: "#f8fafc",
+    fontSize: 15,
+    fontFamily: "inherit",
+    outline: "none",
+    boxSizing: "border-box",
+    transition: "border-color 0.2s, background 0.2s",
+  };
+
+  const iconStyle: React.CSSProperties = {
+    position: "absolute",
+    left: 14,
+    top: "50%",
+    transform: "translateY(-50%)",
+    color: "#475569",
+    pointerEvents: "none",
+    display: "flex",
+    alignItems: "center",
+  };
+
   return (
     <AnimatePresence>
-      <div className="modal-overlay" onClick={onClose}>
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed", inset: 0, zIndex: 50,
+          background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+        }}
+      >
         <motion.div
-          className="glass-card w-full max-w-md p-8 relative"
-          style={{ background: "rgba(10,15,30,0.95)", border: "1px solid rgba(139,92,246,0.2)" }}
-          initial={{ opacity: 0, scale: 0.92, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 20 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
           onClick={(e) => e.stopPropagation()}
+          initial={{ opacity: 0, scale: 0.93, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.93, y: 16 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+          style={{
+            width: "100%", maxWidth: 420,
+            background: "rgba(10,14,28,0.97)",
+            border: "1px solid rgba(139,92,246,0.2)",
+            borderRadius: 20, padding: 32,
+            position: "relative",
+            boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+          }}
         >
           {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 text-slate-500 hover:text-slate-300 transition-colors"
+            style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", color: "#475569", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 4, borderRadius: 6 }}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
 
-          {/* Header */}
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-violet-600 flex items-center justify-center">
-              <Sparkles size={16} className="text-white" />
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg,#9333ea,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Sparkles size={16} color="white" />
             </div>
-            <span className="font-bold text-lg">AnonVibe</span>
+            <span style={{ fontWeight: 800, fontSize: 17 }}>AnonVibe</span>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ background: "rgba(255,255,255,0.04)" }}>
+          <div style={{ display: "flex", gap: 4, padding: 4, borderRadius: 12, background: "rgba(255,255,255,0.04)", marginBottom: 24 }}>
             {(["signin", "signup"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => { setTab(t); setError(""); }}
-                className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
-                style={
-                  tab === t
-                    ? { background: "rgba(147,51,234,0.25)", color: "#c084fc", border: "1px solid rgba(147,51,234,0.4)" }
-                    : { color: "#64748b" }
-                }
-              >
+              <button key={t} onClick={() => { setTab(t); setError(""); }}
+                style={tab === t
+                  ? { flex: 1, padding: "10px 0", borderRadius: 9, fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", border: "1px solid rgba(147,51,234,0.4)", background: "rgba(147,51,234,0.22)", color: "#c084fc" }
+                  : { flex: 1, padding: "10px 0", borderRadius: 9, fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", border: "none", background: "transparent", color: "#64748b" }
+                }>
                 {t === "signin" ? "Sign In" : "Create Account"}
               </button>
             ))}
@@ -102,98 +138,85 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = "si
 
           {/* Error */}
           {error && (
-            <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#fca5a5" }}>
+            <div style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 10, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#fca5a5", fontSize: 13 }}>
               {error}
             </div>
           )}
 
-          {/* Sign In Form */}
+          {/* Sign In */}
           {tab === "signin" && (
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="relative">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  className="input-field pl-10"
-                  type="email"
-                  placeholder="Email address"
-                  value={signInForm.email}
+            <form onSubmit={handleSignIn} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={inputWrap}>
+                <span style={iconStyle}><Mail size={15} /></span>
+                <input style={inputStyle} type="email" placeholder="Email address" value={signInForm.email}
                   onChange={(e) => setSignInForm({ ...signInForm, email: e.target.value })}
-                  required
-                />
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(139,92,246,0.5)"; e.currentTarget.style.background = "rgba(139,92,246,0.05)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+                  required />
               </div>
-              <div className="relative">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  className="input-field pl-10 pr-12"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={signInForm.password}
-                  onChange={(e) => setSignInForm({ ...signInForm, password: e.target.value })}
-                  required
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">
+              <div style={inputWrap}>
+                <span style={iconStyle}><Lock size={15} /></span>
+                <input style={{ ...inputStyle, paddingRight: 44 }} type={showPassword ? "text" : "password"} placeholder="Password"
+                  value={signInForm.password} onChange={(e) => setSignInForm({ ...signInForm, password: e.target.value })}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(139,92,246,0.5)"; e.currentTarget.style.background = "rgba(139,92,246,0.05)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+                  required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#475569", cursor: "pointer", display: "flex" }}>
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              <button type="submit" className="btn-primary w-full" disabled={loading}>
+              <button type="submit" disabled={loading}
+                style={{ width: "100%", padding: "14px", borderRadius: 11, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(147,51,234,0.35)", opacity: loading ? 0.7 : 1 }}>
                 {loading ? "Signing in..." : "Sign In"}
               </button>
-              <p className="text-center text-sm" style={{ color: "#64748b" }}>
+              <p style={{ textAlign: "center", fontSize: 13, color: "#475569", margin: 0 }}>
                 No account?{" "}
-                <button type="button" onClick={() => setTab("signup")} className="text-purple-400 hover:text-purple-300">
+                <button type="button" onClick={() => setTab("signup")} style={{ background: "none", border: "none", color: "#a855f7", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
                   Create one free
                 </button>
               </p>
             </form>
           )}
 
-          {/* Sign Up Form */}
+          {/* Sign Up */}
           {tab === "signup" && (
-            <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="relative">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  className="input-field pl-10"
-                  type="email"
-                  placeholder="Email address"
-                  value={signUpForm.email}
+            <form onSubmit={handleSignUp} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={inputWrap}>
+                <span style={iconStyle}><Mail size={15} /></span>
+                <input style={inputStyle} type="email" placeholder="Email address" value={signUpForm.email}
                   onChange={(e) => setSignUpForm({ ...signUpForm, email: e.target.value })}
-                  required
-                />
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(139,92,246,0.5)"; e.currentTarget.style.background = "rgba(139,92,246,0.05)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+                  required />
               </div>
-              <div className="relative">
-                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  className="input-field pl-10"
-                  type="text"
-                  placeholder="Username"
-                  value={signUpForm.username}
+              <div style={inputWrap}>
+                <span style={iconStyle}><User size={15} /></span>
+                <input style={inputStyle} type="text" placeholder="Username" value={signUpForm.username}
                   onChange={(e) => setSignUpForm({ ...signUpForm, username: e.target.value })}
-                  required
-                  minLength={3}
-                />
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(139,92,246,0.5)"; e.currentTarget.style.background = "rgba(139,92,246,0.05)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+                  required minLength={3} />
               </div>
-              <div className="relative">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  className="input-field pl-10 pr-12"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password (min 6 chars)"
-                  value={signUpForm.password}
-                  onChange={(e) => setSignUpForm({ ...signUpForm, password: e.target.value })}
-                  required
-                  minLength={6}
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">
+              <div style={inputWrap}>
+                <span style={iconStyle}><Lock size={15} /></span>
+                <input style={{ ...inputStyle, paddingRight: 44 }} type={showPassword ? "text" : "password"} placeholder="Password (min 6 chars)"
+                  value={signUpForm.password} onChange={(e) => setSignUpForm({ ...signUpForm, password: e.target.value })}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(139,92,246,0.5)"; e.currentTarget.style.background = "rgba(139,92,246,0.05)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+                  required minLength={6} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#475569", cursor: "pointer", display: "flex" }}>
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              <button type="submit" className="btn-primary w-full" disabled={loading}>
+              <button type="submit" disabled={loading}
+                style={{ width: "100%", padding: "14px", borderRadius: 11, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(147,51,234,0.35)", opacity: loading ? 0.7 : 1 }}>
                 {loading ? "Creating account..." : "Create Account"}
               </button>
-              <p className="text-xs text-center" style={{ color: "#475569" }}>
+              <p style={{ textAlign: "center", fontSize: 12, color: "#334155", margin: 0 }}>
                 By creating an account you agree to our{" "}
-                <span className="text-purple-400 cursor-pointer">Terms of Service</span>
+                <span style={{ color: "#a855f7", cursor: "pointer" }}>Terms of Service</span>
               </p>
             </form>
           )}
