@@ -45,163 +45,165 @@ function Entrance({ onRegister, onlineCount = 0, inviteRoomId, onJoinPrivate }) 
   };
 
   return (
-    <div className="entrance-container glass-panel entrance-anim-in">
-      <div className="globe-wrap">
-        <Globe2 size={54} className="globe-icon pulse-animation" />
-      </div>
-
-      <div className="community-badge animate-fade-in">
-        <Users size={14} />
-        <span>Join {onlineCount > 0 ? (onlineCount + 42) + ' Vibes Live' : 'Thousands Live Now'}</span>
-      </div>
-
-      <h1>Break the Ice Instantly</h1>
-      <p className="subtitle">Meet new people without awkward intros — chat, play, and connect anonymously with built-in games.</p>
-
-      {/* ── 3-Step Connection Strip ── */}
-      <div className="step-strip animate-fade-in">
-        <div className="step-item">
-          <div className="step-icon-wrap"><Sliders size={14} /></div>
-          <span>1. Choose Mode</span>
-        </div>
-        <div className="step-arrow"><ArrowRight size={12} /></div>
-        <div className="step-item">
-          <div className="step-icon-wrap"><Zap size={14} /></div>
-          <span>2. Match Instantly</span>
-        </div>
-        <div className="step-arrow"><ArrowRight size={12} /></div>
-        <div className="step-item">
-          <div className="step-icon-wrap"><Gamepad2 size={14} /></div>
-          <span>3. Play & Chat</span>
-        </div>
-      </div>
-
-      {inviteRoomId && (
-        <div className="invite-alert animate-fade-in">
-          <Sparkles size={16} />
-          <span>You've been invited to a private chat!</span>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        {/* Gender */}
-        <div className="form-group">
-          <label>I am a</label>
-          <select value={gender} onChange={(e) => setGender(e.target.value)}>
-            <option value="unknown">Prefer not to say</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="trans">Trans / NB</option>
-          </select>
+    <>
+      <div className="entrance-container glass-panel entrance-anim-in">
+        <div className="globe-wrap">
+          <Globe2 size={54} className="globe-icon pulse-animation" />
         </div>
 
-        {/* Preference */}
-        <div className="form-group">
-          <label>
-            <Tag size={13} style={{ verticalAlign: 'middle', marginRight: '5px' }} />
-            Chat Preference
-          </label>
-          <div className="pref-wrap">
-            <input
-              type="text"
-              value={preference}
-              onChange={(e) => setPreference(e.target.value)}
-              placeholder="e.g. gaming, music, coding… (leave blank for anyone)"
-              maxLength={40}
-            />
-            {preference && (
-              <span className="pref-tag">{preference.trim().toLowerCase()}</span>
-            )}
+        <div className="community-badge animate-fade-in">
+          <Users size={14} />
+          <span>Join {onlineCount > 0 ? (onlineCount + 42) + ' Vibes Live' : 'Thousands Live Now'}</span>
+        </div>
+
+        <h1>Break the Ice Instantly</h1>
+        <p className="subtitle">Meet new people without awkward intros — chat, play, and connect anonymously with built-in games.</p>
+
+        {/* ── 3-Step Connection Strip ── */}
+        <div className="step-strip animate-fade-in">
+          <div className="step-item">
+            <div className="step-icon-wrap"><Sliders size={14} /></div>
+            <span>1. Choose Mode</span>
           </div>
-          <p className="pref-hint">
-            Only strangers with the same preference will be matched. Leave blank to connect with anyone.
-          </p>
-        </div>
-
-        {/* Mode */}
-        <div className="form-group">
-          <label>Preferred Mode</label>
-          <div className="mode-selector">
-            <button
-              type="button"
-              className={mode === 'text' ? 'active' : ''}
-              onClick={() => setMode('text')}
-            >
-              <MessageSquareText size={20} />
-              Text
-            </button>
-            <button
-              type="button"
-              className={mode === 'video' ? 'active' : ''}
-              onClick={() => setMode('video')}
-            >
-              <Video size={20} />
-              Video
-            </button>
+          <div className="step-arrow"><ArrowRight size={12} /></div>
+          <div className="step-item">
+            <div className="step-icon-wrap"><Zap size={14} /></div>
+            <span>2. Match Instantly</span>
+          </div>
+          <div className="step-arrow"><ArrowRight size={12} /></div>
+          <div className="step-item">
+            <div className="step-icon-wrap"><Gamepad2 size={14} /></div>
+            <span>3. Play & Chat</span>
           </div>
         </div>
 
-        <button
-          type="submit"
-          className="glass-button start-btn"
-        >
-          <Sparkles size={20} />
-          {inviteRoomId ? 'Accept Invite' : 'Start Chatting'}
-        </button>
-
-        {/* ── Trust Band ── */}
-        <div className="trust-band">
-          <span className="trust-item"><Shield size={12} /> Moderated Chat</span>
-          <span className="trust-dot">•</span>
-          <span className="trust-item"><Zap size={12} /> Block / Skip Instantly</span>
-          <span className="trust-dot">•</span>
-          <span className="trust-item"><MessageSquareText size={12} /> Text-First Safer Mode</span>
-          <span className="trust-dot">•</span>
-          <span className="trust-item"><Lock size={12} /> No Signup Required</span>
-        </div>
-
-        {!inviteRoomId && (
-          <button
-            type="button"
-            className="invite-friend-btn"
-            onClick={handleInvite}
-          >
-            {copied ? 'Link Copied! Send it to a friend' : 'Play with a Friend ➔'}
-          </button>
+        {inviteRoomId && (
+          <div className="invite-alert animate-fade-in">
+            <Sparkles size={16} />
+            <span>You've been invited to a private chat!</span>
+          </div>
         )}
-      </form>
 
-      {/* ── Proof / Features Grid ── */}
-      <div className="features-grid">
-        <div className="feature-item">
-          <Gamepad2 size={18} />
-          <h4>Built-in Icebreakers</h4>
-          <p>Play Truth or Dare, TicTacToe, and Never Have I Ever directly in chat.</p>
-        </div>
-        <div className="feature-item">
-          <Lock size={18} />
-          <h4>Zero-Logs Privacy</h4>
-          <p>No registration. Your chats are completely ephemeral and deleted instantly.</p>
-        </div>
-        <div className="feature-item">
-          <Shield size={18} />
-          <h4>Safer Moderation</h4>
-          <p>Text-first matching with quick skip and automated reporting filters.</p>
-        </div>
-        <div className="feature-item">
-          <Users size={18} />
-          <h4>Private Rooms</h4>
-          <p>Challenge your friends directly. Generate a private link to play games.</p>
-        </div>
-      </div>
+        <form onSubmit={handleSubmit}>
+          {/* Gender */}
+          <div className="form-group">
+            <label>I am a</label>
+            <select value={gender} onChange={(e) => setGender(e.target.value)}>
+              <option value="unknown">Prefer not to say</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="trans">Trans / NB</option>
+            </select>
+          </div>
 
-      {/* ── Footer Policy Links ── */}
-      <div className="entrance-footer">
-        <button type="button" onClick={() => openModal('safety')} className="footer-link">Safety Center</button>
-        <span className="footer-separator">•</span>
-        <button type="button" onClick={() => openModal('privacy')} className="footer-link">Privacy Policy</button>
-        <span className="footer-separator">•</span>
-        <button type="button" onClick={() => openModal('rules')} className="footer-link">Community Rules</button>
+          {/* Preference */}
+          <div className="form-group">
+            <label>
+              <Tag size={13} style={{ verticalAlign: 'middle', marginRight: '5px' }} />
+              Chat Preference
+            </label>
+            <div className="pref-wrap">
+              <input
+                type="text"
+                value={preference}
+                onChange={(e) => setPreference(e.target.value)}
+                placeholder="e.g. gaming, music, coding… (leave blank for anyone)"
+                maxLength={40}
+              />
+              {preference && (
+                <span className="pref-tag">{preference.trim().toLowerCase()}</span>
+              )}
+            </div>
+            <p className="pref-hint">
+              Only strangers with the same preference will be matched. Leave blank to connect with anyone.
+            </p>
+          </div>
+
+          {/* Mode */}
+          <div className="form-group">
+            <label>Preferred Mode</label>
+            <div className="mode-selector">
+              <button
+                type="button"
+                className={mode === 'text' ? 'active' : ''}
+                onClick={() => setMode('text')}
+              >
+                <MessageSquareText size={20} />
+                Text
+              </button>
+              <button
+                type="button"
+                className={mode === 'video' ? 'active' : ''}
+                onClick={() => setMode('video')}
+              >
+                <Video size={20} />
+                Video
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="glass-button start-btn"
+          >
+            <Sparkles size={20} />
+            {inviteRoomId ? 'Accept Invite' : 'Start Chatting'}
+          </button>
+
+          {/* ── Trust Band ── */}
+          <div className="trust-band">
+            <span className="trust-item"><Shield size={12} /> Moderated Chat</span>
+            <span className="trust-dot">•</span>
+            <span className="trust-item"><Zap size={12} /> Block / Skip Instantly</span>
+            <span className="trust-dot">•</span>
+            <span className="trust-item"><MessageSquareText size={12} /> Text-First Safer Mode</span>
+            <span className="trust-dot">•</span>
+            <span className="trust-item"><Lock size={12} /> No Signup Required</span>
+          </div>
+
+          {!inviteRoomId && (
+            <button
+              type="button"
+              className="invite-friend-btn"
+              onClick={handleInvite}
+            >
+              {copied ? 'Link Copied! Send it to a friend' : 'Play with a Friend ➔'}
+            </button>
+          )}
+        </form>
+
+        {/* ── Proof / Features Grid ── */}
+        <div className="features-grid">
+          <div className="feature-item">
+            <Gamepad2 size={18} />
+            <h4>Built-in Icebreakers</h4>
+            <p>Play Truth or Dare, TicTacToe, and Never Have I Ever directly in chat.</p>
+          </div>
+          <div className="feature-item">
+            <Lock size={18} />
+            <h4>Zero-Logs Privacy</h4>
+            <p>No registration. Your chats are completely ephemeral and deleted instantly.</p>
+          </div>
+          <div className="feature-item">
+            <Shield size={18} />
+            <h4>Safer Moderation</h4>
+            <p>Text-first matching with quick skip and automated reporting filters.</p>
+          </div>
+          <div className="feature-item">
+            <Users size={18} />
+            <h4>Private Rooms</h4>
+            <p>Challenge your friends directly. Generate a private link to play games.</p>
+          </div>
+        </div>
+
+        {/* ── Footer Policy Links ── */}
+        <div className="entrance-footer">
+          <button type="button" onClick={() => openModal('safety')} className="footer-link">Safety Center</button>
+          <span className="footer-separator">•</span>
+          <button type="button" onClick={() => openModal('privacy')} className="footer-link">Privacy Policy</button>
+          <span className="footer-separator">•</span>
+          <button type="button" onClick={() => openModal('rules')} className="footer-link">Community Rules</button>
+        </div>
       </div>
 
       {/* ── Safety & Guidelines Modal ── */}
@@ -791,7 +793,7 @@ function Entrance({ onRegister, onlineCount = 0, inviteRoomId, onJoinPrivate }) 
           .trust-dot { display: none; }
         }
       `}</style>
-    </div>
+    </>
   );
 }
 
