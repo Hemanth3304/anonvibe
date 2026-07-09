@@ -20,7 +20,7 @@ function App() {
   useEffect(() => {
     const newSocket = io(SOCKET_URL, {
       transports: ['websocket'],
-      autoConnect: false,
+      autoConnect: true, // Connect immediately on load
     });
 
     setSocket(newSocket);
@@ -28,7 +28,7 @@ function App() {
     newSocket.on('online:count', (count) => setOnlineCount(count));
     
     newSocket.on('guest:registered', () => {
-      setView('matching');
+      // Background registration complete, ensure we are in matching queue
       newSocket.emit('queue:join');
     });
 
@@ -83,7 +83,7 @@ function App() {
 
   const handleRegister = (data) => {
     setProfile(data);
-    socket.connect();
+    setView('matching'); // Optimistic UI: Switch instantly
     socket.emit('guest:register', data);
     
     if (inviteRoomId) {
@@ -146,7 +146,7 @@ function App() {
             </label>
             <div className="online-indicator">
               <span className="dot"></span>
-              {onlineCount} Strangers Online
+              {onlineCount > 0 ? `${onlineCount} Strangers Online` : 'Live Matching Now'}
             </div>
           </div>
         </header>
@@ -166,7 +166,7 @@ function App() {
           )}
 
           {view === 'matching' && (
-            <div className="loading-view glass-panel animate-fade-in">
+            <div className="loading-view glass-panel" style={{ animation: 'fadeIn 0.2s ease-out forwards' }}>
               <div className="loader"></div>
               <h2>Searching for a stranger…</h2>
               {isWaitingPrivate 

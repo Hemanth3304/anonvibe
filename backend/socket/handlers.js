@@ -74,7 +74,7 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
           partnerSocketId:  match.socketId,
           partnerGender:    match.gender,
           partnerPreference: match.preference || '',
-          partnerLocation:  await getFakeLocation(),
+          partnerLocation:  getFakeLocation(),
         };
 
         socket.emit('match:found', payload);
@@ -251,7 +251,7 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
           partnerSocketId:  waitingSocketId,
           partnerGender:    partner.gender,
           partnerPreference: partner.preference || '',
-          partnerLocation:  await getFakeLocation(),
+          partnerLocation:  getFakeLocation(),
           isPrivate: true
         };
 
@@ -357,7 +357,7 @@ function filterText(text) {
   return trimmed;
 }
 
-async function getFakeLocation() {
+function getFakeLocation() {
   const locs = ['Tokyo, JP','London, UK','New York, US','Mumbai, IN','Berlin, DE','Sydney, AU','São Paulo, BR','Lagos, NG'];
   return locs[Math.floor(Math.random() * locs.length)];
 }

@@ -134,8 +134,8 @@ main {
 /* Glassmorphism Classes */
 .glass-panel {
   background: var(--glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   border-radius: 24px;
   box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
@@ -193,6 +193,11 @@ input:focus {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.entrance-anim-in {
+  animation: entranceIn 0.6s ease-out both;
+  will-change: transform, opacity;
 }
 
 .animate-fade-in {
