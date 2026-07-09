@@ -218,11 +218,11 @@ export default function Home() {
       )}
 
       {/* ── Hero ── */}
-      <section className="relative pt-32 pb-20 px-6 text-center overflow-hidden">
+      <section className="relative pt-44 pb-20 px-6 text-center overflow-hidden">
         {/* Background glows */}
         <div className="glow-dot w-96 h-96 top-10 left-1/2 -translate-x-1/2" style={{ background: "rgba(147,51,234,0.12)" }} />
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative z-10">
+        <motion.div initial={{ y: 15 }} animate={{ y: 0 }} transition={{ duration: 0.6 }} className="relative z-10">
           {/* Trust badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 text-sm"
             style={{ background: "rgba(147,51,234,0.1)", border: "1px solid rgba(147,51,234,0.25)", color: "#c084fc" }}>
@@ -331,8 +331,16 @@ export default function Home() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="glass-card p-7 cursor-pointer group relative overflow-hidden"
-                style={{ borderColor: f.border }}
+                className="p-7 cursor-pointer group relative overflow-hidden"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: `1px solid ${f.border}`,
+                  borderRadius: 20,
+                  backdropFilter: "blur(16px)",
+                  WebkitBackdropFilter: "blur(16px)",
+                  transition: "all 0.3s ease",
+                }}
+                whileHover={{ y: -4, boxShadow: `0 20px 60px ${f.glow}` }}
                 onClick={() => f.requiresAuth && openAuth("signup")}
               >
                 {/* Glow background */}
