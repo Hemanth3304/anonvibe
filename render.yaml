@@ -1,33 +1,38 @@
-# render.yaml — Render.com full stack config for AnonVibe
-# Push this file to GitHub root, then go to render.com → "New Blueprint"
+# render.yaml — Render.com full stack config for AnonVibe NestJS Backend
 
 services:
-  # ── Backend ──
+  # ── Backend (NestJS) ──
   - type: web
     name: anonvibe-backend
     runtime: node
     rootDir: backend
-    buildCommand: npm install
-    startCommand: node server.js
+    buildCommand: npm install && npm run build && npx prisma generate
+    startCommand: npx prisma migrate deploy && npm run start:prod
     plan: free
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 3001
-      # IMPORTANT: Add these manually in Render dashboard:
-      # FRONTEND_URL, REDIS_URL, ADMIN_PASSWORD
-
-  # ── Frontend ──
-  - type: web
-    name: anonvibe-frontend
-    env: static
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_API_URL
+      - key: DATABASE_URL
+        fromDatabase:
+          name: anonvibe-db
+          property: connectionString
+      - key: REDIS_URL
         fromService:
-          type: web
-          name: anonvibe-backend
-          envVarKey: RENDER_EXTERNAL_URL
+          type: redis
+          name: anonvibe-redis
+          property: connectionString
+      - key: ADMIN_PASSWORD
+        sync: false
+
+  # ── Redis Cache ──
+  - type: redis
+    name: anonvibe-redis
+    plan: free
+    ipAllowList: [] # Bind to internal connections only for security
+
+databases:
+  # ── PostgreSQL Database ──
+  - name: anonvibe-db
+    plan: free
