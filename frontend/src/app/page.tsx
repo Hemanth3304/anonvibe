@@ -10,6 +10,7 @@ import {
 import AuthModal from "@/components/modals/AuthModal";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import AgeGate from "@/components/modals/AgeGate";
+import ChatRoom from "@/components/chat/ChatRoom";
 
 const FEATURES = [
   {
@@ -108,6 +109,7 @@ export default function Home() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userId, setUserId] = useState("");
   const [navOpen, setNavOpen] = useState(false);
+  const [inChat, setInChat] = useState(false);
 
   function openAuth(tab: "signin" | "signup" = "signup") {
     setAuthTab(tab);
@@ -183,8 +185,10 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* ── Hero ── */}
-      <section style={{ position: "relative", zIndex: 1, paddingTop: 120, paddingBottom: 80, textAlign: "center", paddingLeft: 24, paddingRight: 24 }}>
+      {!inChat ? (
+        <>
+          {/* ── Hero ── */}
+          <section style={{ position: "relative", zIndex: 1, paddingTop: 120, paddingBottom: 80, textAlign: "center", paddingLeft: 24, paddingRight: 24 }}>
         {/* Glow */}
         <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "rgba(147,51,234,0.1)", borderRadius: "50%", filter: "blur(80px)", pointerEvents: "none" }} />
 
@@ -213,7 +217,7 @@ export default function Home() {
 
           {/* CTAs */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginBottom: 40 }}>
-            <button id="start-chat-btn" onClick={() => openAuth("signup")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 24px rgba(147,51,234,0.4)" }}>
+            <button id="start-chat-btn" onClick={() => setInChat(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 24px rgba(147,51,234,0.4)" }}>
               <MessageCircle size={17} />Start Anonymous Chat
             </button>
             <button id="signin-btn" onClick={() => openAuth("signin")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
@@ -261,7 +265,13 @@ export default function Home() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
             {FEATURES.map((f, i) => (
               <motion.div key={f.id} id={`feature-${f.id}`} custom={i} variants={cardVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}
-                onClick={() => f.requiresAuth && openAuth("signup")}
+                onClick={() => {
+                  if (f.id === "anon-chat") {
+                    setInChat(true);
+                  } else if (f.requiresAuth) {
+                    openAuth("signup");
+                  }
+                }}
                 style={{ padding: 28, borderRadius: 20, background: "rgba(255,255,255,0.04)", border: `1px solid ${f.border}`, cursor: "pointer", position: "relative", overflow: "hidden", transition: "all 0.3s ease" }}
                 whileHover={{ y: -4, boxShadow: `0 20px 60px ${f.glow}, 0 0 0 1px ${f.border}` }}
               >
@@ -336,6 +346,10 @@ export default function Home() {
           </div>
         </div>
       </footer>
+        </>
+      ) : (
+        <ChatRoom onLeave={() => setInChat(false)} />
+      )}
 
       {/* ── Responsive Styles ── */}
       <style>{`
