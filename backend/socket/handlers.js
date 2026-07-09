@@ -13,6 +13,19 @@ const guests = new Map();
 export function setupSocketHandlers(io, redis, matchingService, roomService) {
 
   io.on('connection', async (socket) => {
+    const clientIp = getClientIp(socket);
+    try {
+      const isBanned = await redis.get(`banned:ip:${clientIp}`);
+      if (isBanned) {
+        logger.warn(`Rejected connection from banned IP: ${clientIp}`);
+        socket.emit('error', { message: 'You have been suspended for violating community rules. Please try again later.' });
+        socket.disconnect(true);
+        return;
+      }
+    } catch (err) {
+      logger.error(`Failed to verify ban list for IP ${clientIp}:`, err);
+    }
+
     const guestId = uuidv4();
     logger.info(`Guest connected: ${guestId} (${socket.id})`);
 
@@ -22,6 +35,7 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
 
     // ── 1. REGISTER GUEST ─────────────────────────────────────────
     socket.on('guest:register', async ({ gender, language, preference, interests, mode }) => {
+      const clientIp = getClientIp(socket);
       const profile = {
         socketId: socket.id,
         guestId,
@@ -33,6 +47,7 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
         connectedAt: Date.now(),
         partnerId: null,
         roomId: null,
+        ipAddress:  clientIp,
       };
 
       guests.set(socket.id, profile);
@@ -41,6 +56,7 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
         gender:     profile.gender,
         preference: profile.preference,
         mode:       profile.mode,
+        ipAddress:  profile.ipAddress,
       });
       await redis.expire(`guest:${socket.id}`, 3600);
 
@@ -301,13 +317,46 @@ export function setupSocketHandlers(io, redis, matchingService, roomService) {
     socket.on('user:report', async ({ reason }) => {
       const profile = guests.get(socket.id);
       if (!profile?.partnerId) return;
+
+      const partnerSocketId = profile.partnerId;
+      const partnerProfile = guests.get(partnerSocketId);
+      const partnerIp = partnerProfile?.ipAddress || (io.sockets.sockets.get(partnerSocketId) ? getClientIp(io.sockets.sockets.get(partnerSocketId)) : null);
+
       await redis.rPush('moderation:reports', JSON.stringify({
         reporter:  socket.id,
-        reported:  profile.partnerId,
+        reported:  partnerSocketId,
         reason:    reason || 'unspecified',
         timestamp: Date.now(),
       }));
       socket.emit('report:submitted');
+
+      if (partnerIp) {
+        const reportKey = `reports:ip:${partnerIp}`;
+        try {
+          const reportsCount = await redis.incr(reportKey);
+          
+          if (reportsCount === 1) {
+            await redis.expire(reportKey, 600); // 10 minutes sliding window
+          }
+
+          logger.info(`IP ${partnerIp} reported. Active reports in window: ${reportsCount}`);
+
+          if (reportsCount >= 3) {
+            // Ban the IP address in Redis for 1 hour (3600 seconds)
+            await redis.set(`banned:ip:${partnerIp}`, '1', 'EX', 3600);
+            logger.warn(`IP ${partnerIp} has been auto-suspended for exceeding report thresholds.`);
+
+            // Terminate offender's socket connection immediately
+            const partnerSocket = io.sockets.sockets.get(partnerSocketId);
+            if (partnerSocket) {
+              partnerSocket.emit('error', { message: 'You have been suspended for violating community rules. Please try again later.' });
+              partnerSocket.disconnect(true);
+            }
+          }
+        } catch (err) {
+          logger.error(`Error in auto-suspension logic for IP ${partnerIp}:`, err);
+        }
+      }
     });
 
     // ── 9. DISCONNECT ─────────────────────────────────────────────
@@ -347,6 +396,15 @@ async function disconnectFromPartner(socket, redis, io, guests, matchingService)
     profile.partnerId = null;
     profile.roomId    = null;
   }
+}
+
+function getClientIp(socket) {
+  if (!socket) return null;
+  const forwarded = socket.handshake.headers['x-forwarded-for'];
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return socket.handshake.address;
 }
 
 const BLOCKED_WORDS = ['spam', 'advertisement']; // extend with proper list

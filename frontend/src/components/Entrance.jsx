@@ -10,6 +10,22 @@ function Entrance({ onRegister, onlineCount = 0, inviteRoomId, onJoinPrivate }) 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState('safety'); // 'safety' | 'privacy' | 'rules'
 
+  // Age Gate State
+  const [hasAcceptedAgeGate, setHasAcceptedAgeGate] = useState(
+    localStorage.getItem('age_gate_accepted') === 'true'
+  );
+  const [ageChecked, setAgeChecked] = useState(false);
+  const [conductChecked, setConductChecked] = useState(false);
+  const [rulesChecked, setRulesChecked] = useState(false);
+
+  const handleAgeGateSubmit = (e) => {
+    e.preventDefault();
+    if (ageChecked && conductChecked && rulesChecked) {
+      localStorage.setItem('age_gate_accepted', 'true');
+      setHasAcceptedAgeGate(true);
+    }
+  };
+
   const openModal = (tab) => {
     setModalTab(tab);
     setIsModalOpen(true);
@@ -46,6 +62,55 @@ function Entrance({ onRegister, onlineCount = 0, inviteRoomId, onJoinPrivate }) 
 
   return (
     <>
+      {!hasAcceptedAgeGate && (
+        <div className="age-gate-backdrop animate-fade-in">
+          <div className="age-gate-modal glass-panel">
+            <div className="age-gate-header">
+              <div className="age-badge">18+</div>
+              <h2>Age Verification Required</h2>
+              <p>AnonVibe matches you with random people. You must confirm your age and agree to our standards to join the vibe.</p>
+            </div>
+
+            <form onSubmit={handleAgeGateSubmit} className="age-gate-form">
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={ageChecked} 
+                  onChange={(e) => setAgeChecked(e.target.checked)} 
+                />
+                <span className="checkbox-text">I am 18 years of age or older (required).</span>
+              </label>
+
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={conductChecked} 
+                  onChange={(e) => setConductChecked(e.target.checked)} 
+                />
+                <span className="checkbox-text">I agree to be respectful. I will not engage in harassment, creepy behavior, or share explicit content.</span>
+              </label>
+
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={rulesChecked} 
+                  onChange={(e) => setRulesChecked(e.target.checked)} 
+                />
+                <span className="checkbox-text">I agree to the <button type="button" onClick={() => openModal('rules')} className="inline-link">Community Rules</button> and <button type="button" onClick={() => openModal('privacy')} className="inline-link">Privacy Policy</button>.</span>
+              </label>
+
+              <button 
+                type="submit" 
+                className="glass-button start-btn age-gate-submit-btn" 
+                disabled={!(ageChecked && conductChecked && rulesChecked)}
+              >
+                Confirm & Enter Vibe
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="entrance-container glass-panel entrance-anim-in">
         <div className="globe-wrap">
           <Globe2 size={54} className="globe-icon pulse-animation" />
@@ -791,6 +856,117 @@ function Entrance({ onRegister, onlineCount = 0, inviteRoomId, onJoinPrivate }) 
           .step-strip { display: none; } /* Hide step strip on tiny screens */
           .trust-band { flex-direction: column; gap: 0.2rem; }
           .trust-dot { display: none; }
+        }
+
+        /* ── Age Gate Overlay ── */
+        .age-gate-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(10, 10, 12, 0.96);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          z-index: 2000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1.5rem;
+        }
+        .age-gate-modal {
+          max-width: 460px;
+          width: 100%;
+          background: rgba(20, 20, 25, 0.7);
+          border: 1px solid var(--glass-border);
+          border-radius: 24px;
+          padding: 2.5rem 2rem;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          animation: modalScaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+          text-align: center;
+        }
+        .age-gate-header h2 {
+          font-size: 1.5rem;
+          margin-bottom: 0.5rem;
+          font-weight: 700;
+          background: linear-gradient(135deg, var(--text-main) 30%, var(--accent-primary) 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .age-gate-header p {
+          color: var(--text-muted);
+          font-size: 0.88rem;
+          line-height: 1.45;
+          margin-bottom: 2rem;
+        }
+        .age-badge {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          border: 2px solid #ef4444;
+          background: rgba(239, 68, 68, 0.1);
+          color: #ef4444;
+          font-size: 1.25rem;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1.5rem auto;
+          box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+        }
+        .age-gate-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          text-align: left;
+        }
+        .checkbox-label {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.75rem;
+          cursor: pointer;
+          user-select: none;
+        }
+        .checkbox-label input[type="checkbox"] {
+          width: 18px;
+          height: 18px;
+          margin-top: 2px;
+          flex-shrink: 0;
+          cursor: pointer;
+          accent-color: var(--accent-primary);
+        }
+        .checkbox-text {
+          font-size: 0.84rem;
+          color: var(--text-muted);
+          line-height: 1.4;
+        }
+        .inline-link {
+          background: none;
+          border: none;
+          color: var(--accent-primary);
+          text-decoration: underline;
+          cursor: pointer;
+          font-family: inherit;
+          padding: 0;
+          font-size: inherit;
+          font-weight: 600;
+        }
+        .inline-link:hover {
+          filter: brightness(1.1);
+        }
+        .age-gate-submit-btn {
+          width: 100%;
+          padding: 0.9rem;
+          font-size: 1rem;
+          margin-top: 0.75rem;
+        }
+        
+        /* Light mode adjustments for Age Gate */
+        body.light .age-gate-backdrop {
+          background: rgba(248, 250, 252, 0.96);
+        }
+        body.light .age-gate-modal {
+          background: rgba(255, 255, 255, 0.8);
+        }
+        body.light .checkbox-text {
+          color: #475569;
         }
       `}</style>
     </>
