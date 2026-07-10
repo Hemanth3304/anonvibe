@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import {
@@ -12,6 +12,7 @@ import AuthModal from "@/components/modals/AuthModal";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import AgeGate from "@/components/modals/AgeGate";
 import ChatRoom from "@/components/chat/ChatRoom";
+import { supabase } from "@/lib/supabase";
 
 const FEATURES = [
   {
@@ -113,6 +114,31 @@ export default function Home() {
   const [inChat, setInChat] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUserId(session.user.id);
+      }
+    });
+
+    // Listen for auth changes (like when OAuth redirects back)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUserId(session.user.id);
+      } else {
+        setUserId("");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setUserId("");
+  }
+
   function openAuth(tab: "signin" | "signup" = "signup") {
     setAuthTab(tab);
     setAuthOpen(true);
@@ -166,8 +192,17 @@ export default function Home() {
 
         {/* Desktop auth */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }} className="hide-mobile">
-          <button onClick={() => openAuth("signin")} style={{ padding: "8px 18px", borderRadius: 10, background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Sign In</button>
-          <button onClick={() => openAuth("signup")} style={{ padding: "8px 18px", borderRadius: 10, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 16px rgba(147,51,234,0.35)" }}>Get Started</button>
+          {userId ? (
+            <>
+              <button onClick={() => router.push("/dashboard/user")} style={{ padding: "8px 18px", borderRadius: 10, background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Dashboard</button>
+              <button onClick={handleLogout} style={{ padding: "8px 18px", borderRadius: 10, background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#ef4444", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Log Out</button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => openAuth("signin")} style={{ padding: "8px 18px", borderRadius: 10, background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Sign In</button>
+              <button onClick={() => openAuth("signup")} style={{ padding: "8px 18px", borderRadius: 10, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 16px rgba(147,51,234,0.35)" }}>Get Started</button>
+            </>
+          )}
         </div>
 
         {/* Mobile menu toggle */}
@@ -181,8 +216,17 @@ export default function Home() {
         {navOpen && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             style={{ position: "fixed", top: 64, left: 0, right: 0, zIndex: 40, padding: 16, display: "flex", flexDirection: "column", gap: 10, background: "rgba(10,15,30,0.98)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-            <button onClick={() => { openAuth("signin"); setNavOpen(false); }} style={{ padding: "12px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Sign In</button>
-            <button onClick={() => { openAuth("signup"); setNavOpen(false); }} style={{ padding: "12px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Create Account</button>
+            {userId ? (
+              <>
+                <button onClick={() => { router.push("/dashboard/user"); setNavOpen(false); }} style={{ padding: "12px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Dashboard</button>
+                <button onClick={() => { handleLogout(); setNavOpen(false); }} style={{ padding: "12px", borderRadius: 12, background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#ef4444", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Log Out</button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => { openAuth("signin"); setNavOpen(false); }} style={{ padding: "12px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Sign In</button>
+                <button onClick={() => { openAuth("signup"); setNavOpen(false); }} style={{ padding: "12px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Create Account</button>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
