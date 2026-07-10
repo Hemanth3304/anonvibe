@@ -169,7 +169,7 @@ export default function Home() {
       {!inChat ? (
         <>
           {/* ── Hero ── */}
-          <section style={{ position: "relative", zIndex: 1, paddingTop: 120, paddingBottom: 80, textAlign: "center", paddingLeft: 24, paddingRight: 24 }}>
+          <section style={{ position: "relative", zIndex: 1, paddingTop: 56, paddingBottom: 80, textAlign: "center", paddingLeft: 24, paddingRight: 24 }}>
         {/* Glow */}
         <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "rgba(147,51,234,0.1)", borderRadius: "50%", filter: "blur(80px)", pointerEvents: "none" }} />
 
