@@ -161,7 +161,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
       </AnimatePresence>
 
       {/* Main Content Padding (if navbar is visible) */}
-      <main className={`flex-1 flex flex-col ${!isChatRoom ? "pt-16" : ""}`}>
+      <main className={`w-full ${!isChatRoom ? "pt-16" : ""}`}>
         {children}
       </main>
 

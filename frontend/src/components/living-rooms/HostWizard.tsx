@@ -12,7 +12,7 @@ export default function HostWizard() {
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col h-full min-h-[600px]">
+    <div className="w-full max-w-3xl mx-auto flex flex-col min-h-[600px]">
       {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex justify-between text-xs text-white/50 mb-2 px-1">
