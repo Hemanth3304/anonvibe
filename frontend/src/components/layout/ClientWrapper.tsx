@@ -75,7 +75,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
   const isChatRoom = pathname?.startsWith('/chat');
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#030712] text-slate-50">
+    <div className="flex flex-col w-full min-h-screen bg-[#030712] text-slate-50">
       {!isChatRoom && (
         <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-8 h-16 bg-[#030712]/85 backdrop-blur-xl border-b border-white/5">
           <Link href="/" className="flex items-center gap-2">

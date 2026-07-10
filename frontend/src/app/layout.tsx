@@ -29,7 +29,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased bg-[#030712]">
+      <body className="antialiased bg-[#030712] w-full min-w-full overflow-x-hidden">
         <ClientWrapper>{children}</ClientWrapper>
       </body>
     </html>
