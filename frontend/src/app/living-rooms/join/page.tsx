@@ -57,7 +57,7 @@ const MOCK_ROOMS = [
 
 export default function JoinRoomPage() {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white relative overflow-hidden flex flex-col p-6 pt-24">
+    <div className="w-full h-full bg-[#0A0A0A] text-white relative overflow-hidden flex flex-col p-6 flex-1">
       {/* Dynamic Background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[10%] right-[20%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] opacity-50 mix-blend-screen pointer-events-none" />

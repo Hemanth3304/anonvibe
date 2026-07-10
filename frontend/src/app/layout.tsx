@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ClientWrapper from "@/components/layout/ClientWrapper";
 
 export const metadata: Metadata = {
   title: "AnonVibe — Meet New People. Chat Anonymously. Join Communities.",
@@ -28,7 +29,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased bg-[#030712]">
+        <ClientWrapper>{children}</ClientWrapper>
+      </body>
     </html>
   );
 }

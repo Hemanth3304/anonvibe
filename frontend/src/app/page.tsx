@@ -140,8 +140,7 @@ export default function Home() {
   }
 
   function openAuth(tab: "signin" | "signup" = "signup") {
-    setAuthTab(tab);
-    setAuthOpen(true);
+    window.dispatchEvent(new CustomEvent("open-auth", { detail: tab }));
   }
 
   function handleAuthSuccess(id: string) {
@@ -165,73 +164,7 @@ export default function Home() {
         background: "radial-gradient(ellipse 80% 50% at 20% -10%, rgba(139,92,246,0.15) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 10%, rgba(244,114,182,0.08) 0%, transparent 60%)"
       }} />
 
-      {/* ── Navbar ── */}
-      <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 32px", height: 64,
-        background: "rgba(3,7,18,0.85)", backdropFilter: "blur(20px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)"
-      }}>
-        {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#9333ea,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Sparkles size={15} color="white" />
-          </div>
-          <span style={{ fontWeight: 800, fontSize: 17, letterSpacing: "-0.3px" }}>AnonVibe</span>
-        </div>
 
-        {/* Desktop links */}
-        <div style={{ display: "flex", alignItems: "center", gap: 28 }} className="hide-mobile">
-          {["Features", "Communities", "Events", "Safety"].map(item => (
-            <a key={item} href={`#${item.toLowerCase()}`} style={{ color: "#94a3b8", fontSize: 14, textDecoration: "none", transition: "color 0.2s" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#f8fafc")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#94a3b8")}>
-              {item}
-            </a>
-          ))}
-        </div>
-
-        {/* Desktop auth */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }} className="hide-mobile">
-          {userId ? (
-            <>
-              <button onClick={() => router.push("/dashboard/user")} style={{ padding: "8px 18px", borderRadius: 10, background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Dashboard</button>
-              <button onClick={handleLogout} style={{ padding: "8px 18px", borderRadius: 10, background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#ef4444", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Log Out</button>
-            </>
-          ) : (
-            <>
-              <button onClick={() => openAuth("signin")} style={{ padding: "8px 18px", borderRadius: 10, background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Sign In</button>
-              <button onClick={() => openAuth("signup")} style={{ padding: "8px 18px", borderRadius: 10, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 16px rgba(147,51,234,0.35)" }}>Get Started</button>
-            </>
-          )}
-        </div>
-
-        {/* Mobile menu toggle */}
-        <button className="show-mobile" onClick={() => setNavOpen(!navOpen)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: 4 }}>
-          {navOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
-      </nav>
-
-      {/* Mobile nav */}
-      <AnimatePresence>
-        {navOpen && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            style={{ position: "fixed", top: 64, left: 0, right: 0, zIndex: 40, padding: 16, display: "flex", flexDirection: "column", gap: 10, background: "rgba(10,15,30,0.98)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-            {userId ? (
-              <>
-                <button onClick={() => { router.push("/dashboard/user"); setNavOpen(false); }} style={{ padding: "12px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Dashboard</button>
-                <button onClick={() => { handleLogout(); setNavOpen(false); }} style={{ padding: "12px", borderRadius: 12, background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#ef4444", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Log Out</button>
-              </>
-            ) : (
-              <>
-                <button onClick={() => { openAuth("signin"); setNavOpen(false); }} style={{ padding: "12px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Sign In</button>
-                <button onClick={() => { openAuth("signup"); setNavOpen(false); }} style={{ padding: "12px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Create Account</button>
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {!inChat ? (
         <>
@@ -434,14 +367,6 @@ export default function Home() {
         }
       `}</style>
 
-      {/* Modals */}
-      {authOpen && (
-        <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} onSuccess={handleAuthSuccess} defaultTab={authTab} />
-      )}
-      {showOnboarding && userId && (
-        <OnboardingFlow userId={userId} onComplete={handleOnboardingComplete} />
-      )}
-      <AgeGate />
     </div>
   );
 }

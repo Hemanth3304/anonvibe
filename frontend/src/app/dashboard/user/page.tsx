@@ -41,7 +41,7 @@ const BOOKINGS = [
 
 export default function UserDashboardPage() {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white p-6 pt-24">
+    <div className="w-full h-full bg-[#0A0A0A] text-white p-6 py-12 flex-1">
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Header */}
