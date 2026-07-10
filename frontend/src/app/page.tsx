@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import {
   MessageCircle, Heart, MapPin, Users, Radio, Calendar,
@@ -110,6 +111,7 @@ export default function Home() {
   const [userId, setUserId] = useState("");
   const [navOpen, setNavOpen] = useState(false);
   const [inChat, setInChat] = useState(false);
+  const router = useRouter();
 
   function openAuth(tab: "signin" | "signup" = "signup") {
     setAuthTab(tab);
@@ -268,6 +270,8 @@ export default function Home() {
                 onClick={() => {
                   if (f.id === "anon-chat") {
                     setInChat(true);
+                  } else if (f.id === "living-rooms") {
+                    router.push("/living-rooms");
                   } else if (f.requiresAuth) {
                     openAuth("signup");
                   }
