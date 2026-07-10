@@ -75,51 +75,53 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
   const isChatRoom = pathname?.startsWith('/chat');
 
   return (
-    <div className="flex flex-col min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
+    <div className="flex flex-col min-h-screen bg-[#030712] text-slate-50">
       {!isChatRoom && (
-        <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 h-20 card-surface border-b border-[var(--border-subtle)] bg-[var(--surface)]">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center border border-[var(--border-subtle)]">
-              <Sparkles className="w-5 h-5 text-[var(--primary)]" />
+        <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-8 h-16 bg-[#030712]/85 backdrop-blur-xl border-b border-white/5">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-violet-600 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight text-[var(--text-primary)]">AnonVibe</span>
+            <span className="font-extrabold text-[17px] tracking-tight text-white">AnonVibe</span>
           </Link>
 
           {/* Desktop Links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-7">
             {["Features", "Communities", "Events", "Safety"].map(item => (
-              <Link key={item} href={`/#${item.toLowerCase()}`} className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors">
+              <Link key={item} href={`/#${item.toLowerCase()}`} className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
                 {item}
               </Link>
             ))}
           </div>
 
           {/* Desktop Auth */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             {userId ? (
               <>
                 <Link href="/dashboard/user">
-                  <button className="btn-secondary">Dashboard</button>
+                  <button className="px-4 py-2 rounded-xl bg-transparent border border-white/10 text-slate-400 hover:text-white text-sm font-semibold transition-colors">
+                    Dashboard
+                  </button>
                 </Link>
-                <button onClick={handleLogout} className="text-sm font-medium text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+                <button onClick={handleLogout} className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500/20 text-sm font-semibold transition-colors">
                   Log Out
                 </button>
               </>
             ) : (
               <>
-                <button onClick={() => openAuth("signin")} className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors">
-                  Log In
+                <button onClick={() => openAuth("signin")} className="px-4 py-2 rounded-xl bg-transparent border border-white/10 text-slate-400 hover:text-white text-sm font-semibold transition-colors">
+                  Sign In
                 </button>
-                <button onClick={() => openAuth("signup")} className="btn-primary">
+                <button onClick={() => openAuth("signup")} className="px-4 py-2 rounded-xl bg-gradient-to-br from-purple-600 to-violet-600 text-white text-sm font-semibold hover:shadow-[0_4px_16px_rgba(147,51,234,0.35)] transition-all">
                   Get Started
                 </button>
               </>
             )}
           </div>
 
-          {/* Mobile Menu Toggle */}
-          <button className="md:hidden p-2 text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors" onClick={() => setNavOpen(true)}>
-            <Menu className="w-6 h-6" />
+          {/* Mobile Toggle */}
+          <button className="md:hidden p-1 text-slate-400 hover:text-white" onClick={() => setNavOpen(!navOpen)}>
+            {navOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </nav>
       )}
@@ -128,31 +130,28 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
       <AnimatePresence>
         {navOpen && (
           <motion.div 
-            initial={{ opacity: 0, y: -20 }} 
+            initial={{ opacity: 0, y: -10 }} 
             animate={{ opacity: 1, y: 0 }} 
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-[60] bg-[var(--bg-primary)] p-6 md:hidden flex flex-col gap-6 pt-24"
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed top-16 left-0 right-0 z-40 p-4 flex flex-col gap-3 bg-[#0a0f1e]/98 backdrop-blur-xl border-b border-white/5 md:hidden"
           >
-            <button className="absolute top-6 right-6 p-2 text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors" onClick={() => setNavOpen(false)}>
-              <X className="w-6 h-6" />
-            </button>
             {userId ? (
               <>
                 <Link href="/dashboard/user" onClick={() => setNavOpen(false)}>
-                  <button className="w-full btn-secondary text-left justify-start">
+                  <button className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-semibold text-left">
                     Dashboard
                   </button>
                 </Link>
-                <button onClick={handleLogout} className="w-full p-3 rounded-lg border border-[var(--border-medium)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] text-sm font-medium text-left">
+                <button onClick={handleLogout} className="w-full p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-semibold text-left">
                   Log Out
                 </button>
               </>
             ) : (
               <>
-                <button onClick={() => { openAuth("signin"); setNavOpen(false); }} className="w-full btn-secondary text-left justify-start">
+                <button onClick={() => { openAuth("signin"); setNavOpen(false); }} className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-semibold text-left">
                   Sign In
                 </button>
-                <button onClick={() => { openAuth("signup"); setNavOpen(false); }} className="w-full btn-primary text-left justify-start">
+                <button onClick={() => { openAuth("signup"); setNavOpen(false); }} className="w-full p-3 rounded-xl bg-gradient-to-br from-purple-600 to-violet-600 text-white text-sm font-semibold text-left">
                   Create Account
                 </button>
               </>
@@ -162,7 +161,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
       </AnimatePresence>
 
       {/* Main Content Padding (if navbar is visible) */}
-      <main className={`w-full flex-1 flex flex-col relative z-0 ${!isChatRoom ? "pt-20" : ""}`}>
+      <main className={`w-full ${!isChatRoom ? "pt-16" : ""}`}>
         {children}
       </main>
 
