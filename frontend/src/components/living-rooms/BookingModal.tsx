@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Users, IndianRupee, CreditCard, ShieldCheck } from "lucide-react";
+import { X, Users, IndianRupee, CreditCard, ShieldCheck, ArrowRight } from "lucide-react";
 import { useState } from "react";
 
 interface BookingModalProps {

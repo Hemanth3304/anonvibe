@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, MapPin, Calendar, Filter, X } from "lucide-react";
+import { Search, MapPin, Calendar, Filter, X, IndianRupee } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
