@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import {
   MessageCircle, Heart, MapPin, Users, Radio, Calendar,
   Sparkles, Shield, Zap, ArrowRight, Star, Lock, ChevronRight,
-  Globe, Menu, X
+  Globe, Menu, X, Video
 } from "lucide-react";
 import AuthModal from "@/components/modals/AuthModal";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
@@ -155,110 +156,98 @@ export default function Home() {
     setShowOnboarding(false);
     alert("Welcome to AnonVibe! 🎉 (Home page coming soon)");
   }
-
   return (
-    <div style={{ background: "#030712", minHeight: "100vh", overflowX: "hidden", color: "#f8fafc" }}>
-      {/* Gradient mesh background */}
-      <div style={{
-        position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
-        background: "radial-gradient(ellipse 80% 50% at 20% -10%, rgba(139,92,246,0.15) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 10%, rgba(244,114,182,0.08) 0%, transparent 60%)"
-      }} />
-
-
-
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] w-full overflow-hidden">
       {!inChat ? (
         <>
           {/* ── Hero ── */}
-          <section style={{ position: "relative", zIndex: 1, paddingTop: 56, paddingBottom: 80, textAlign: "center", paddingLeft: 24, paddingRight: 24 }}>
-        {/* Glow */}
-        <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "rgba(147,51,234,0.1)", borderRadius: "50%", filter: "blur(80px)", pointerEvents: "none" }} />
-
-        <motion.div initial={{ y: 12 }} animate={{ y: 0 }} transition={{ duration: 0.5 }} style={{ position: "relative" }}>
-          {/* Badge */}
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 16px", borderRadius: 100, background: "rgba(147,51,234,0.1)", border: "1px solid rgba(147,51,234,0.25)", color: "#c084fc", fontSize: 13, fontWeight: 600, marginBottom: 28 }}>
-            <Sparkles size={13} />
-            <span>The #1 Social Discovery Platform</span>
-          </div>
-
-          {/* Main headline */}
-          <h1 style={{ fontSize: "clamp(36px, 7vw, 72px)", fontWeight: 900, lineHeight: 1.1, letterSpacing: "-1px", marginBottom: 20, fontFamily: "inherit" }}>
-            Meet New People.<br />
-            <span style={{ background: "linear-gradient(135deg,#c084fc 0%,#818cf8 50%,#22d3ee 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-              Join Communities.
-            </span><br />
-            Chat Anonymously.
-          </h1>
-
-          <p style={{ fontSize: "clamp(15px, 2vw, 18px)", color: "#94a3b8", maxWidth: 560, margin: "0 auto 12px" }}>
-            Anonymous Chat • Dating • Nearby People • Living Rooms • Communities • Events
-          </p>
-          <p style={{ fontSize: 14, color: "#64748b", maxWidth: 460, margin: "0 auto 36px" }}>
-            AnonVibe is a modern social discovery platform where you can connect authentically — safely and privately.
-          </p>
-
-          {/* CTAs */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginBottom: 40 }}>
-            <button id="start-chat-btn" onClick={() => setInChat(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 24px rgba(147,51,234,0.4)" }}>
-              <MessageCircle size={17} />Start Anonymous Chat
-            </button>
-            {userId ? (
-              <button id="dashboard-btn" onClick={() => router.push("/dashboard/user")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
-                Go to Dashboard <ArrowRight size={15} />
-              </button>
-            ) : (
-              <>
-                <button id="signin-btn" onClick={() => openAuth("signin")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
-                  Sign In <ArrowRight size={15} />
-                </button>
-                <button id="create-account-btn" onClick={() => openAuth("signup")} style={{ padding: "14px 28px", borderRadius: 12, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "#94a3b8", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
-                  Create Account
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Trust strip */}
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 24 }}>
-            {[{ icon: Shield, label: "End-to-End Privacy" }, { icon: Zap, label: "AI Moderation" }, { icon: Globe, label: "150+ Countries" }, { icon: Star, label: "4.9★ Rating" }].map(({ icon: Icon, label }) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#64748b" }}>
-                <Icon size={14} color="#a855f7" />{label}
+          <section className="relative z-10 pt-24 pb-24 px-6 text-center max-w-6xl mx-auto flex flex-col items-center justify-center">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease: "easeOut" }} className="relative z-10 flex flex-col items-center">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full card-surface border-[var(--secondary)] text-[var(--secondary)] text-label mb-8">
+                <Sparkles size={14} className="text-[var(--secondary)]" />
+                <span>The #1 Social Discovery Platform</span>
               </div>
-            ))}
-          </div>
-        </motion.div>
-      </section>
 
-      {/* ── Stats ── */}
-      <section style={{ position: "relative", zIndex: 1, padding: "40px 24px" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }} className="stats-grid">
-          {STATS.map((stat, i) => (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-              style={{ textAlign: "center", padding: "24px 16px", borderRadius: 16, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div style={{ fontSize: 28, fontWeight: 900, background: "linear-gradient(135deg,#c084fc,#22d3ee)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", marginBottom: 4 }}>{stat.value}</div>
-              <div style={{ fontSize: 13, color: "#64748b" }}>{stat.label}</div>
+              {/* Main headline */}
+              <h1 className="text-5xl md:text-7xl font-display font-normal tracking-tight leading-[1.1] mb-6 text-[var(--primary)]">
+                Meet New People.<br />
+                <span className="italic">Join Communities.</span><br />
+                Chat Anonymously.
+              </h1>
+
+              <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto mb-10 leading-relaxed font-body">
+                AnonVibe is a modern social discovery platform where you can connect authentically — safely and privately through Anonymous Chat, Dating, Living Rooms, and Events.
+              </p>
+
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 justify-center w-full sm:w-auto mb-16">
+                <button id="start-chat-btn" onClick={() => setInChat(true)} className="btn-primary w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 text-base">
+                  <MessageCircle size={18} />Start Anonymous Chat
+                </button>
+                <Link href="/living-rooms" className="w-full sm:w-auto">
+                  <button className="btn-secondary w-full flex items-center justify-center gap-2 px-8 py-4 text-base">
+                    <Video size={18} />Join a Living Room
+                  </button>
+                </Link>
+                {userId ? (
+                  <button id="dashboard-btn" onClick={() => router.push("/dashboard/user")} className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 text-base">
+                    Go to Dashboard <ArrowRight size={15} />
+                  </button>
+                ) : (
+                  <>
+                    <button id="signin-btn" onClick={() => openAuth("signin")} className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 text-base">
+                      Sign In <ArrowRight size={15} />
+                    </button>
+                    <button id="create-account-btn" onClick={() => openAuth("signup")} className="btn-secondary w-full sm:w-auto px-8 py-4 text-base">
+                      Create Account
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Trust strip */}
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 24 }}>
+                {[{ icon: Shield, label: "End-to-End Privacy" }, { icon: Zap, label: "AI Moderation" }, { icon: Globe, label: "150+ Countries" }, { icon: Star, label: "4.9★ Rating" }].map(({ icon: Icon, label }) => (
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text-tertiary)" }}>
+                    <Icon size={14} color="var(--primary)" />{label}
+                  </div>
+                ))}
+              </div>
             </motion.div>
-          ))}
-        </div>
-      </section>
+          </section>
+
+          {/* ── Stats ── */}
+          <section className="relative z-10 py-12 px-6">
+            <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
+              {STATS.map((stat, i) => (
+                <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                  className="text-center p-6 card-surface">
+                  <div className="text-4xl font-display font-normal text-[var(--primary)] mb-2">{stat.value}</div>
+                  <div className="text-[var(--text-secondary)] text-label">{stat.label}</div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
 
       {/* ── Feature Cards ── */}
-      <section id="features" style={{ position: "relative", zIndex: 1, padding: "60px 24px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: "center", marginBottom: 48 }}>
-            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 900, marginBottom: 12, letterSpacing: "-0.5px" }}>
-              Everything you need to <span style={{ background: "linear-gradient(135deg,#c084fc,#22d3ee)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>connect</span>
+      <section id="features" className="relative z-10 py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-display font-normal mb-4 tracking-tight text-[var(--primary)]">
+              Everything you need to connect
             </h2>
-            <p style={{ fontSize: 16, color: "#64748b" }}>Six powerful ways to discover and engage with people around the world.</p>
+            <p className="text-lg text-[var(--text-secondary)] font-body">Six powerful ways to discover and engage with people around the world.</p>
           </motion.div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f, i) => (
               <motion.div key={f.id} id={`feature-${f.id}`} custom={i} variants={cardVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}
                 onClick={() => {
                   if (f.id === "anon-chat") {
                     setInChat(true);
                   } else if (f.id === "living-rooms") {
-                    router.push("/living-rooms");
+                    router.push('/living-rooms');
                   } else if (f.requiresAuth) {
                     if (userId) {
                       router.push("/dashboard/user");
@@ -267,34 +256,33 @@ export default function Home() {
                     }
                   }
                 }}
-                style={{ padding: 28, borderRadius: 20, background: "rgba(255,255,255,0.04)", border: `1px solid ${f.border}`, cursor: "pointer", position: "relative", overflow: "hidden", transition: "all 0.3s ease" }}
-                whileHover={{ y: -4, boxShadow: `0 20px 60px ${f.glow}, 0 0 0 1px ${f.border}` }}
+                className="card-surface hover-soft-lift p-8 cursor-pointer relative overflow-hidden flex flex-col h-full"
               >
                 {/* Icon row */}
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", background: `${f.color}18`, border: `1px solid ${f.color}40` }}>
-                    <f.icon size={21} color={f.color} />
+                <div className="flex items-start justify-between mb-5">
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-[var(--bg-secondary)] border border-[var(--border-subtle)]">
+                    <f.icon size={21} className="text-[var(--primary)]" />
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    {f.requiresAuth && <Lock size={11} color="#475569" />}
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 100, background: `${f.color}18`, color: f.color, border: `1px solid ${f.color}40` }}>{f.badge}</span>
+                  <div className="flex items-center gap-1.5">
+                    {f.requiresAuth && <Lock size={11} className="text-[var(--text-tertiary)]" />}
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--primary)] border border-[var(--border-subtle)] uppercase tracking-wider">{f.badge}</span>
                   </div>
                 </div>
 
-                <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 4, letterSpacing: "-0.2px" }}>{f.title}</h3>
-                <p style={{ fontSize: 13, color: "#64748b", marginBottom: 16 }}>{f.tagline}</p>
+                <h3 className="text-[1.15rem] font-bold mb-1.5 tracking-tight text-[var(--text-primary)]">{f.title}</h3>
+                <p className="text-sm text-[var(--text-tertiary)] mb-5">{f.tagline}</p>
 
-                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+                <ul className="list-none p-0 m-0 flex flex-col gap-3 flex-1">
                   {f.features.map(feat => (
-                    <li key={feat} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: "#94a3b8" }}>
-                      <div style={{ width: 6, height: 6, borderRadius: 3, background: f.color, marginTop: 5, flexShrink: 0 }} />
+                    <li key={feat} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
+                      <div className="w-1 h-1 rounded-full mt-2 flex-shrink-0 bg-[var(--secondary)]" />
                       {feat}
                     </li>
                   ))}
                 </ul>
 
-                <button style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 700, background: "none", border: "none", padding: 0, color: f.color, cursor: "pointer" }}>
-                  {f.requiresAuth ? (userId ? "Go to Dashboard" : "Sign up to unlock") : "Start for free"} <ChevronRight size={14} />
+                <button className="mt-8 flex items-center gap-1 text-sm font-bold bg-transparent border-none p-0 cursor-pointer transition-opacity hover:opacity-80 text-[var(--primary)]">
+                  {f.requiresAuth ? (userId ? "Go to Dashboard" : "Sign up to unlock") : "Start for free"} <ChevronRight size={16} />
                 </button>
               </motion.div>
             ))}
@@ -303,26 +291,25 @@ export default function Home() {
       </section>
 
       {/* ── CTA Banner ── */}
-      <section style={{ position: "relative", zIndex: 1, padding: "60px 24px" }}>
+      <section className="relative z-10 py-20 px-6">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          style={{ maxWidth: 800, margin: "0 auto", textAlign: "center", padding: "56px 40px", borderRadius: 28, background: "linear-gradient(135deg,rgba(147,51,234,0.12),rgba(124,58,237,0.08))", border: "1px solid rgba(147,51,234,0.2)", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)", width: 300, height: 300, background: "rgba(147,51,234,0.12)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none" }} />
-          <div style={{ position: "relative" }}>
-            <h2 style={{ fontSize: "clamp(26px, 4vw, 44px)", fontWeight: 900, marginBottom: 12, letterSpacing: "-0.5px" }}>
-              Ready to <span style={{ background: "linear-gradient(135deg,#c084fc,#22d3ee)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>connect?</span>
+          className="max-w-4xl mx-auto text-center py-16 px-8 md:px-12 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] relative overflow-hidden card-surface-lg">
+          <div className="relative">
+            <h2 className="text-3xl md:text-5xl font-display font-normal mb-4 tracking-tight text-[var(--primary)]">
+              Ready to <span className="italic">connect?</span>
             </h2>
-            <p style={{ fontSize: 16, color: "#94a3b8", marginBottom: 28 }}>Join half a million people already discovering meaningful connections on AnonVibe.</p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
+            <p className="text-lg text-[var(--text-secondary)] font-body mb-10 max-w-xl mx-auto">Join half a million people already discovering meaningful connections on AnonVibe.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               {userId ? (
-                <button onClick={() => router.push("/dashboard/user")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-                  <Sparkles size={16} />Go to Dashboard
+                <button onClick={() => router.push("/dashboard/user")} className="btn-primary w-full sm:w-auto">
+                  <Sparkles size={18} />Go to Dashboard
                 </button>
               ) : (
                 <>
-                  <button onClick={() => openAuth("signup")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-                    <Sparkles size={16} />Create Free Account
+                  <button onClick={() => openAuth("signup")} className="btn-primary w-full sm:w-auto">
+                    <Sparkles size={18} />Create Free Account
                   </button>
-                  <button onClick={() => openAuth("signin")} style={{ padding: "14px 28px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
+                  <button onClick={() => openAuth("signin")} className="btn-secondary w-full sm:w-auto">
                     Sign In
                   </button>
                 </>
@@ -333,18 +320,18 @@ export default function Home() {
       </section>
 
       {/* ── Footer ── */}
-      <footer style={{ position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,0.06)", padding: "32px 24px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 24, height: 24, borderRadius: 6, background: "linear-gradient(135deg,#9333ea,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Sparkles size={12} color="white" />
+      <footer className="relative z-10 border-t border-[var(--border-subtle)] py-8 px-6 bg-[var(--surface)]">
+        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded flex items-center justify-center bg-[var(--bg-secondary)] border border-[var(--border-subtle)]">
+              <Sparkles size={12} className="text-[var(--primary)]" />
             </div>
-            <span style={{ fontWeight: 800, fontSize: 15 }}>AnonVibe</span>
+            <span className="font-display font-bold text-sm text-[var(--text-primary)]">AnonVibe</span>
           </div>
-          <p style={{ fontSize: 13, color: "#334155" }}>© 2026 AnonVibe. Anonymous. Secure. Social.</p>
-          <div style={{ display: "flex", gap: 24 }}>
+          <p className="text-sm text-[var(--text-tertiary)] font-body">© 2026 AnonVibe. Anonymous. Secure. Social.</p>
+          <div className="flex gap-6">
             {["Privacy", "Terms", "Safety"].map(link => (
-              <a key={link} href="#" style={{ fontSize: 13, color: "#475569", textDecoration: "none" }}>{link}</a>
+              <a key={link} href="#" className="text-sm text-[var(--text-secondary)] hover:text-[var(--primary)] font-body transition-colors">{link}</a>
             ))}
           </div>
         </div>

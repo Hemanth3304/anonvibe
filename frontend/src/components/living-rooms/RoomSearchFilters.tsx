@@ -12,19 +12,19 @@ export default function RoomSearchFilters() {
       {/* Search Bar */}
       <div className="flex gap-2 w-full">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-tertiary)]" />
           <input 
             type="text" 
             placeholder="Search by city, area, or pincode..." 
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white focus:outline-none focus:border-purple-500 transition-colors"
+            className="w-full bg-[var(--surface)] border border-[var(--border-subtle)] rounded-lg pl-12 pr-4 py-4 text-[var(--text-primary)] font-body focus:outline-none focus:border-[var(--primary)] transition-colors soft-shadow"
           />
         </div>
         <button 
           onClick={() => setShowFilters(!showFilters)}
-          className={`px-4 md:px-6 py-4 rounded-xl border transition-colors flex items-center gap-2 ${showFilters ? 'bg-purple-600 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
+          className={`px-4 md:px-6 py-4 rounded-lg border transition-colors flex items-center gap-2 ${showFilters ? 'bg-[var(--primary)] border-[var(--primary)] text-white' : 'bg-[var(--surface)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}`}
         >
           {showFilters ? <X className="w-5 h-5" /> : <Filter className="w-5 h-5" />}
-          <span className="hidden md:inline">{showFilters ? 'Close' : 'Filters'}</span>
+          <span className="hidden md:inline font-body font-medium">{showFilters ? 'Close' : 'Filters'}</span>
         </button>
       </div>
 
@@ -37,12 +37,12 @@ export default function RoomSearchFilters() {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="p-6 bg-white/5 border border-white/10 rounded-xl grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="p-6 bg-[var(--surface)] border border-[var(--border-subtle)] rounded-lg grid grid-cols-1 md:grid-cols-4 gap-6 soft-shadow">
               
               {/* Category */}
               <div>
-                <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Category</label>
-                <select className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:border-purple-500 outline-none">
+                <label className="block text-[var(--text-tertiary)] text-label mb-2">Category</label>
+                <select className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded px-4 py-2.5 text-[var(--text-primary)] font-body text-sm focus:border-[var(--primary)] outline-none">
                   <option>All Categories</option>
                   <option>House Party</option>
                   <option>Gaming</option>
@@ -53,23 +53,23 @@ export default function RoomSearchFilters() {
 
               {/* Date */}
               <div>
-                <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Date</label>
-                <input type="date" className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:border-purple-500 outline-none" />
+                <label className="block text-[var(--text-tertiary)] text-label mb-2">Date</label>
+                <input type="date" className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded px-4 py-2.5 text-[var(--text-primary)] font-body text-sm focus:border-[var(--primary)] outline-none" />
               </div>
 
               {/* Budget */}
               <div>
-                <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Budget (Max)</label>
+                <label className="block text-[var(--text-tertiary)] text-label mb-2">Budget (Max)</label>
                 <div className="relative">
-                  <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <input type="number" placeholder="5000" className="w-full bg-black/50 border border-white/10 rounded-lg pl-9 pr-4 py-2.5 text-white text-sm focus:border-purple-500 outline-none" />
+                  <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)]" />
+                  <input type="number" placeholder="5000" className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded pl-9 pr-4 py-2.5 text-[var(--text-primary)] font-body text-sm focus:border-[var(--primary)] outline-none" />
                 </div>
               </div>
 
               {/* Distance */}
               <div>
-                <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Distance</label>
-                <select className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:border-purple-500 outline-none">
+                <label className="block text-[var(--text-tertiary)] text-label mb-2">Distance</label>
+                <select className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded px-4 py-2.5 text-[var(--text-primary)] font-body text-sm focus:border-[var(--primary)] outline-none">
                   <option>Anywhere</option>
                   <option>Within 5 km</option>
                   <option>Within 10 km</option>
@@ -77,8 +77,8 @@ export default function RoomSearchFilters() {
                 </select>
               </div>
 
-              <div className="md:col-span-4 flex justify-end pt-4 border-t border-white/10">
-                <button className="px-6 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors">
+              <div className="md:col-span-4 flex justify-end pt-4 border-t border-[var(--border-subtle)]">
+                <button className="btn-primary">
                   Apply Filters
                 </button>
               </div>
