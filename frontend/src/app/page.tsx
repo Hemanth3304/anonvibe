@@ -147,7 +147,9 @@ export default function Home() {
   function handleAuthSuccess(id: string) {
     setUserId(id);
     setAuthOpen(false);
-    setShowOnboarding(true);
+    if (authTab === "signup") {
+      setShowOnboarding(true);
+    }
   }
 
   function handleOnboardingComplete() {
@@ -266,12 +268,20 @@ export default function Home() {
             <button id="start-chat-btn" onClick={() => setInChat(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 24px rgba(147,51,234,0.4)" }}>
               <MessageCircle size={17} />Start Anonymous Chat
             </button>
-            <button id="signin-btn" onClick={() => openAuth("signin")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
-              Sign In <ArrowRight size={15} />
-            </button>
-            <button id="create-account-btn" onClick={() => openAuth("signup")} style={{ padding: "14px 28px", borderRadius: 12, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "#94a3b8", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
-              Create Account
-            </button>
+            {userId ? (
+              <button id="dashboard-btn" onClick={() => router.push("/dashboard/user")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
+                Go to Dashboard <ArrowRight size={15} />
+              </button>
+            ) : (
+              <>
+                <button id="signin-btn" onClick={() => openAuth("signin")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
+                  Sign In <ArrowRight size={15} />
+                </button>
+                <button id="create-account-btn" onClick={() => openAuth("signup")} style={{ padding: "14px 28px", borderRadius: 12, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "#94a3b8", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
+                  Create Account
+                </button>
+              </>
+            )}
           </div>
 
           {/* Trust strip */}
@@ -317,7 +327,11 @@ export default function Home() {
                   } else if (f.id === "living-rooms") {
                     router.push("/living-rooms");
                   } else if (f.requiresAuth) {
-                    openAuth("signup");
+                    if (userId) {
+                      router.push("/dashboard/user");
+                    } else {
+                      openAuth("signup");
+                    }
                   }
                 }}
                 style={{ padding: 28, borderRadius: 20, background: "rgba(255,255,255,0.04)", border: `1px solid ${f.border}`, cursor: "pointer", position: "relative", overflow: "hidden", transition: "all 0.3s ease" }}
@@ -347,7 +361,7 @@ export default function Home() {
                 </ul>
 
                 <button style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 700, background: "none", border: "none", padding: 0, color: f.color, cursor: "pointer" }}>
-                  {f.requiresAuth ? "Sign up to unlock" : "Start for free"} <ChevronRight size={14} />
+                  {f.requiresAuth ? (userId ? "Go to Dashboard" : "Sign up to unlock") : "Start for free"} <ChevronRight size={14} />
                 </button>
               </motion.div>
             ))}
@@ -366,12 +380,20 @@ export default function Home() {
             </h2>
             <p style={{ fontSize: 16, color: "#94a3b8", marginBottom: 28 }}>Join half a million people already discovering meaningful connections on AnonVibe.</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
-              <button onClick={() => openAuth("signup")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-                <Sparkles size={16} />Create Free Account
-              </button>
-              <button onClick={() => openAuth("signin")} style={{ padding: "14px 28px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
-                Sign In
-              </button>
+              {userId ? (
+                <button onClick={() => router.push("/dashboard/user")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+                  <Sparkles size={16} />Go to Dashboard
+                </button>
+              ) : (
+                <>
+                  <button onClick={() => openAuth("signup")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg,#9333ea,#7c3aed)", border: "none", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+                    <Sparkles size={16} />Create Free Account
+                  </button>
+                  <button onClick={() => openAuth("signin")} style={{ padding: "14px 28px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
+                    Sign In
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </motion.div>
