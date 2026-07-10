@@ -9,7 +9,7 @@ export default function LivingRoomsEntry() {
   const [hoveredCard, setHoveredCard] = useState<"host" | "join" | null>(null);
 
   return (
-    <div className="w-full h-full bg-[#0A0A0A] text-white relative overflow-hidden flex flex-col items-center justify-center p-6 py-12 flex-1">
+    <div className="w-full min-h-full bg-[#0A0A0A] text-white relative overflow-hidden flex flex-col items-center justify-center p-6 py-12 flex-1">
       {/* Dynamic Background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px] opacity-50 mix-blend-screen" />

@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 
 export default function HostRoomPage() {
   return (
-    <div className="w-full h-full bg-[#0A0A0A] text-white relative overflow-hidden flex flex-col p-6 flex-1">
+    <div className="w-full min-h-full bg-[#0A0A0A] text-white relative overflow-hidden flex flex-col p-6 flex-1">
       {/* Dynamic Background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px] opacity-50 mix-blend-screen pointer-events-none" />
